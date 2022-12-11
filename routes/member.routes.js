@@ -12,13 +12,8 @@ module.exports = function (app) {
   });
 
   app.get("/api/test/all", controller.allAccess);
-
-  //   TODO:
-  //   Change the method
-  app.get("/api/members/get__all_news", member_controller.get_all_news);
-
+  app.get("/api/members/get_all_news", member_controller.get_all_news);
   app.get("/api/test/user", [authJwt.verifyToken], controller.userBoard);
-
   app.get(
     "/api/test/mod",
     [authJwt.verifyToken, authJwt.isModerator],

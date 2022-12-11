@@ -29,7 +29,7 @@ exports.create_news = async (req, res) => {
   // Destructuring the results recieved
   // image_url is recieved from aws s3 after uploading
   // it on the frontend
-  const { title, body, image_url } = req.body;
+  const { title, body, image_url, news_url } = req.body;
 
   // Check for response length
   if(title.length == 0){
@@ -50,11 +50,12 @@ exports.create_news = async (req, res) => {
         title: title,
         body: body,
         image_url: image_url,
+        news_url: news_url   // this link is used to send users to the appropirate blog on frontend
       },
     })
     .then((news) => {
       console.log(news);
-      return res.json({ message: "Successfully created news" }).status(201).send();
+      return res.json({ message: "Successfully created news", data: [news] }).status(201).send();
     })
     .catch((err) => {
       // P2002 user already exists
@@ -71,7 +72,7 @@ exports.create_news = async (req, res) => {
 exports.update_news = async (req, res) => {
 
   // Destructuring recieved response
-  const { news_id, title, body, image_url } = req.body;
+  const { news_id, title, body, image_url, news_url } = req.body;
 
   // Check for response length
   if(title.length == 0){
@@ -93,20 +94,27 @@ exports.update_news = async (req, res) => {
         title: title,
         body: body,
         image_url: image_url,
+        news_url: news_url,
         updated_at: new Date() // Update the date with the time updated
       },
     })
     .then((news) => {
       console.log(news);
-      res.json({ message: "Successfully updated news" }).status(200).send();
+      return res.json({ message: "Successfully updated news", data: [news]  }).status(200).send();
     })
     .catch((err) => {
       console.log(err);
       if(err.code == "P2011"){
         // 422 = nprocessable Entity
-        res.json({ message: "Cannot be null" }).status(422).send();
+        return res.json({ message: "Cannot be null" }).status(422).send();
       }
-      res.json({ message: "Intenral Server Error" }).status(500).send();
+
+      if(err.code == "P2025"){
+        // 422 = nprocessable Entity
+        return res.json({ message: "Record not found" }).status(404).send();
+      }
+
+      return res.json({ message: "Intenral Server Error" }).status(500).send();
     });
 
 };
@@ -128,11 +136,15 @@ exports.delete_news = async (req, res) => {
     })
     .then((news) => {
       console.log(news);
-      res.json({ message: "Successfully deleted news" }).status(200).send();
+      // news.count == 0 : record not found or none deleted
+      if(news.count == 0){
+        return res.json({ message: "Record not found" }).status(404).send();
+      }
+      return res.json({ message: "Successfully deleted news" }).status(200).send();
     })
     .catch((err) => {
       console.log(err);
-      res.json({ message: "Intenral Server Error" }).status(500).send();
+      return res.json({ message: "Intenral Server Error" }).status(500).send();
     });
 
 };
