@@ -3,46 +3,49 @@ const firebase = require("../config/firebase.config");
 
 const prisma = db.prisma; // Creating an instance of the databse
 
-const tokens = [];
 
 // TODO: store all the token in a db table to make it persist even if the server crashes
 exports.create_notification = async (req, res) => {
   const { title, body, for_all_members, member_ids } = req.body;
-
-  let notification = {};
-
-  console.log(req.body);
+  
+  let member_ids_to_update = [];
 
   // if for_all_member = true
   if (for_all_members) {
-    notification = {
-      title: title,
-      body: body,
-      for_all: for_all_members,
-    };
+    // Get all the members
+    // The format of the members returned will be = [ { id: 1 }, { id: 6 }, { id: 7 } ]
+    await prisma.members.findMany({
+      select: {
+        id: true
+      }
+    })
+      .then((member) => {
+        console.log(member);
+        member_ids_to_update = member;
+      })
   } else {
-    notification = {
-      title: title,
-      body: body,
-      for_all: false,
-      members_notification: {
-        create: [{
-          member: 1 
-        }],
-      },
-    };
+    // if the message is not for all members then assign the member_ids 
+    // recieved from the client
+    member_ids_to_update = member_ids;
   }
+
+  console.log(member_ids_to_update);
 
   await prisma.notifications
     .create({
-      data: notification,
+      data: {
+        title: title,
+        body: body,
+        member: {
+          connect: member_ids
+        }
+      }
     })
     .then((result) => {
       console.log(result);
       return res
         .json({
           message: "Successfully created notification for all",
-          data: result,
         })
         .status(201)
         .send();
@@ -58,29 +61,69 @@ exports.create_notification = async (req, res) => {
 };
 
 // Get all notification
-// Todo: get all notfication and filter by user and then send
 exports.get_notification = async (req, res) => {
+  
+  const { member_id } = req.body;
+
+  // Get notification for the given user
+  await prisma.members
+    .findMany({
+      where: {
+        id: member_id,
+      },
+      select: {
+        id: true,
+        ycf_id: true,
+        notification: true,
+      },
+    })
+    .then(async(result) => {
+        return res
+          .json({
+            member_notification: result,
+          })
+          .status(201)
+          .send();
+      })
+    .catch((err) => {
+      console.log(err);
+      return res.json({ message: "Intrnal server error" }).status(500).send();
+    });
+};
+
+// When an member clicks cancel on the notification
+// then disconnect their member id to the specific notification
+exports.cancel_notification = async (req, res) => {
+  const { notification_id, member_id } = req.body;
 
   await prisma.notifications
-    .findMany({})
+    .update({
+      where: {
+        id:  notification_id
+      },
+      data: {
+        member: {
+          disconnect: {
+            id: member_id
+          },
+        },
+      },
+    })
     .then((result) => {
       console.log(result);
       return res
         .json({
-          data: result,
+          message: "Successfully deleted the notification"
         })
-        .status(201)
+        .status(200)
         .send();
     })
     .catch((err) => {
-        return res.json({ message: "Intrnal server error" }).status(500).send();
-
+      console.log(err);
+      return res.json({ message: "Intrnal server error" }).status(500).send();
     });
+
 };
-
-
-
-
 
 
 

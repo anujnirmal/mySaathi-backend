@@ -8,10 +8,17 @@ var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
 
+
+// -----
+// Dashboard User CRUD routes begin here
+// -----
+
 // Create User who can login in Admin Dashboard
 exports.create_dashboard_user = async(req, res) => {
   
   const { email, password, role } = req.body;
+
+  // role = SUPERADMIN, ADMIN
 
   await prisma.dashboard_users.create({
     data: {
@@ -28,6 +35,8 @@ exports.create_dashboard_user = async(req, res) => {
     })
     .catch((err) => {
       
+      console.log(err);
+
       // P2002 user already exists
       if(err.code == "P2002"){
         
@@ -136,6 +145,62 @@ exports.dashboard_sign_in = (req, res) => {
 
       
 };
+
+
+// -----
+// Dashboard User CRUD routes ends here
+// -----
+
+
+// -----
+// Member User CRUD routes begin here
+// -----
+
+// Create member
+exports.create_member = async(req, res) => {
+  
+  // TODO: generate ycf_id
+  const { 
+    ycf_id,   
+    full_name, 
+    mobile_number,
+    aadhaar_number,
+    pancard_number,
+    address
+  } = req.body;
+
+  await prisma.members.create({
+    data: {
+      ycf_id: ycf_id.toString(),
+      full_name: full_name,
+      mobile_number: mobile_number,
+      aadhaar_number: aadhaar_number,
+      pancard_number: pancard_number,
+      address: address,
+    }
+  })
+    .then((member) => {
+
+      console.log(member);
+      return res.json({message: "Successfully created member", data: member}).status(201).send();
+    
+    })
+    .catch((err) => {
+
+      console.log(err)
+      // P2002 user already exists
+      if(err.code == "P2002"){
+        
+        // 409 = already exists
+        return res.json({message: "Record already Exists"}).status(409).send();
+
+      }
+    
+    })
+};
+
+
+
 
 // TODO: Implement refresh token
 exports.refreshToken = async (req, res) => {

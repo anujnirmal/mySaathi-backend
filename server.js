@@ -7,6 +7,12 @@ var corsOptions = {
   origin: "http://localhost:8081"
 };
 
+// Setting globally, so the response containing BigInt datatype
+// can be serialized
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
+
 app.use(cors(corsOptions));
 
 // parse requests of content-type - application/json

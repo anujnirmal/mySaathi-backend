@@ -14,10 +14,11 @@ model dashboard_users {
   id         Int     @id @default(autoincrement())
   email_id   String  @unique @db.VarChar(255)
   password   String
-  role       String  @db.VarChar(255)
+  role       DASHBOARD_ROLES  @default(ADMIN)
   token      String?
-  expiryDate BigInt?
+  expiryDate DateTime?
 }
+
 
 model news {
   id         Int      @id @default(autoincrement())
@@ -33,10 +34,9 @@ model notifications {
   id                  Int                     @id @default(autoincrement())
   title               String                  @db.VarChar(255)
   body                String
-  for_all             Boolean                 @default(true)
   created_at          DateTime                @default(now())
   updated_at          DateTime                @updatedAt
-  member_notification members_notifications[]
+  member              members[]      //one notification can have many members
 }
 
 // TODO: 
@@ -46,22 +46,42 @@ model members {
   id                  Int                     @id @default(autoincrement())
   ycf_id              String                  @unique @db.VarChar(255)
   full_name           String
-  mobile_number       Int
-  aadhaar_number      BigInt
-  pancard_number      String                  @db.VarChar(255)
+  mobile_number       BigInt                  @unique
+  aadhaar_number      BigInt                  @unique
+  pancard_number      String                  @unique @db.VarChar(255)
   address             String
-  member_notification members_notifications[]
+  refresh_token       refresh_tokens[]
+  notification        notifications[]  // member can have many notification
 }
+
+
+model refresh_tokens {
+  id                  Int                     @id @default(autoincrement())
+  token               String                  @unique
+  expiry_date         DateTime
+  member              members                 @relation(fields: [member_id], references: [id])
+  member_id           Int
+}
+
+
+enum DASHBOARD_ROLES {
+  SUPERADMIN
+  ADMIN
+}
+
+
+
+
 
 // Many to many relation between members and notification
-model members_notifications {
-  member          members       @relation(fields: [member_id], references: [id])
-  member_id       Int
-  notification    notifications @relation(fields: [notification_id], references: [id])
-  notification_id Int
+// model members_notifications {
+//   member          members       @relation(fields: [member_id], references: [id])
+//   member_id       Int
+//   notification    notifications @relation(fields: [notification_id], references: [id])
+//   notification_id Int
 
-  @@id([member_id, notification_id])
-}
+//   @@id([member_id, notification_id])
+// }
 
 // model Post {
 //   id        Int      @id @default(autoincrement())

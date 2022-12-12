@@ -15,7 +15,7 @@ module.exports = function(app) {
 
   // Get notification for a specific user
   app.post("/api/notification/get_notification", notification_controller.get_notification);
-  
+  app.post("/api/notification/cancel_notification", notification_controller.cancel_notification);
   app.post("/api/notification/create_notifications", notification_controller.create_notification);
   // app.post("/api/notification/register_notification", notification_controller.get_all_notifications);
   // app.post("/api/notification/send_notification", notification_controller.get_all_notifications);
