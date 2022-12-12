@@ -1,5 +1,7 @@
 const { verifySignUp } = require("../middleware");
-const controller = require("../controllers/admin.usercontrol.controller");
+const refresh_token_controller = require("../controllers/refreshToken/refreshToken.controller");
+const dashboard_auth_controller = require("../controllers/auth/dashboard.auth.controller");
+const member_auth_controller = require("../controllers/auth/member.auth.controller");
 
 module.exports = function(app) {
   app.use(function(req, res, next) {
@@ -10,20 +12,15 @@ module.exports = function(app) {
     next();
   });
 
-
-  // CRUD for Dashboard users
-  app.post("/api/admin/create_dashboard_user", controller.create_dashboard_user);
-  app.put("/api/admin/update_dashboard_password", controller.update_dashboard_password);
-  app.delete("/api/admin/delete_dashboard_user", controller.delete_dashboard_user);
-
-  // Crud for members
-  app.post("/api/admin/create_member", controller.create_member);
-  app.put("/api/admin/update_member", controller.update_dashboard_password);
-  app.delete("/api/admin/delete_member", controller.delete_dashboard_user);
+  // SignIn routes
+  app.post("/api/auth/admin/sign_in", dashboard_auth_controller.dashboard_sign_in); // Dashboard user signin
+  app.post("/api/auth/member/sign_in", member_auth_controller.member_sign_in); // Member signin on app
   
-  // app.post("/api/auth/admin/dashboard_sign_in", controller.dashboard_sign_in);
-  // app.post("/api/auth/admin/refreshtoken", controller.refreshToken);
-
+  // Generate new access tokens using refresh token
+  // Refresh tokens for dashboard users
+  app.post("/api/auth/dashboard_refresh_token", refresh_token_controller.dashboard_refreshToken); 
+  // Refresh tokens for members
+  app.post("/api/auth/member_refresh_token", refresh_token_controller.member_refreshToken); 
 
 };
 

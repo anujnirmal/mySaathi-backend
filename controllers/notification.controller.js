@@ -3,8 +3,6 @@ const firebase = require("../config/firebase.config");
 
 const prisma = db.prisma; // Creating an instance of the databse
 
-
-// TODO: store all the token in a db table to make it persist even if the server crashes
 exports.create_notification = async (req, res) => {
   const { title, body, for_all_members, member_ids } = req.body;
   

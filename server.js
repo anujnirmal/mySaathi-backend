@@ -32,7 +32,7 @@ require('./routes/user.routes')(app);
 require('./routes/member.routes')(app); // member routes for the mobile app
 require('./routes/news.routes')(app) 
 require('./routes/notification.routes')(app) 
-
+require('./routes/dashboard.routes')(app) 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {

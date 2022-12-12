@@ -15,8 +15,8 @@ model dashboard_users {
   email_id   String  @unique @db.VarChar(255)
   password   String
   role       DASHBOARD_ROLES  @default(ADMIN)
-  token      String?
-  expiryDate DateTime?
+  refresh_token      String?
+  expiry_at DateTime?
 }
 
 
@@ -57,8 +57,8 @@ model members {
 
 model refresh_tokens {
   id                  Int                     @id @default(autoincrement())
-  token               String                  @unique
-  expiry_date         DateTime
+  refresh_token       String                  @unique
+  expiry_at           DateTime
   member              members                 @relation(fields: [member_id], references: [id])
   member_id           Int
 }
