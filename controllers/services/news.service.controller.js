@@ -1,4 +1,4 @@
-const db = require("../models");
+const db = require("../../models");
 
 const prisma = db.prisma; // Creating an instance of the databse
 

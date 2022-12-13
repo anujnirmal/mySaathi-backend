@@ -1,6 +1,6 @@
-const db = require("../models");
-const config = require("../config/auth.config");
-const RefreshToken = require("./refreshToken/refreshToken");
+const db = require("../../models");
+const config = require("../../config/auth.config");
+const RefreshToken = require("../refreshToken/refreshToken");
 
 const prisma = db.prisma;
 

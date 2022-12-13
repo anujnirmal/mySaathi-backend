@@ -1,5 +1,5 @@
-const db = require("../models");
-const firebase = require("../config/firebase.config");
+const db = require("../../models");
+const firebase = require("../../config/firebase.config");
 
 const prisma = db.prisma; // Creating an instance of the databse
 

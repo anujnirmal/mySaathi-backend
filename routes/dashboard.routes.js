@@ -1,7 +1,7 @@
 const { authJwt } = require("../middleware");
-const controller = require("../controllers/admin.usercontrol.controller");
-const news_controller = require("../controllers/news.controller");
-const notification_controller = require("../controllers/notification.controller");
+const controller = require("../controllers/userControl/admin.usercontrol.controller");
+const news_controller = require("../controllers/services/news.service.controller");
+const notification_controller = require("../controllers/services/notification.service.controller");
 
 module.exports = function(app) {
   app.use(function(req, res, next) {
