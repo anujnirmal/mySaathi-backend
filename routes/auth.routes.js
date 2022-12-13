@@ -1,4 +1,4 @@
-const { verifySignUp, authJwt } = require("../middleware");
+const { authJwt } = require("../middleware");
 const refresh_token_controller = require("../controllers/refreshToken/refreshToken.controller");
 const dashboard_auth_controller = require("../controllers/auth/dashboard.auth.controller");
 const member_auth_controller = require("../controllers/auth/member.auth.controller");
@@ -12,24 +12,22 @@ module.exports = function(app) {
     next();
   });
 
-  // SignIn routes
-  app.post("/api/auth/admin/sign_in", dashboard_auth_controller.dashboard_sign_in); // Dashboard user signin
-  app.post("/api/auth/member/sign_in", member_auth_controller.member_sign_in); // Member signin on app
-  app.post(
-    "/api/auth/member/log_out", 
-    authJwt.verifyToken,
-    member_auth_controller.member_log_out
-  ); // Member logout on app
-  app.post(
-    "/api/auth/member/log_out_all", 
-    authJwt.verifyToken,
-    member_auth_controller.member_log_out_from_all_devices
-  ); // Member logout from all devices
+  // -----
+  // SIGNIN ROUTES FOR MEMBER AND ADMIN
+  // -----
+  app.post("/api/auth/admin/sign_in", dashboard_auth_controller.dashboard_sign_in); 
+  app.post("/api/auth/member/sign_in", member_auth_controller.member_sign_in);
   
-  // Generate new access tokens using refresh token
-  // Refresh tokens for dashboard users
+  // -----
+  // LOGOUT ROUTES FOR MEMBER
+  // -----
+  app.post("/api/auth/member/log_out", authJwt.verifyToken, member_auth_controller.member_log_out); 
+  app.post("/api/auth/member/log_out_all", authJwt.verifyToken, member_auth_controller.member_log_out_from_all_devices); 
+  
+  // -----
+  // REFRESH TOKEN GENERATION FOR ADMIN AND MEMBER
+  // -----
   app.post("/api/auth/dashboard_refresh_token", refresh_token_controller.dashboard_refreshToken); 
-  // Refresh tokens for members
   app.post("/api/auth/member_refresh_token", refresh_token_controller.member_refreshToken); 
 
 };

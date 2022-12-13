@@ -26,13 +26,16 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to mySaaThi Server" });
 });
 
-// routes
-require('./routes/auth.routes')(app); // authentication routes
-require('./routes/user.routes')(app); 
-require('./routes/member.routes')(app); // member routes for the mobile app
-require('./routes/news.routes')(app) 
-require('./routes/notification.routes')(app) 
-require('./routes/dashboard.routes')(app) 
+// Basic Terminology
+// Dashboard Users - these are admins, super admins access to the dashboard
+// Members - these are end users, these users will only access through mobile app - ios or android
+
+// -----
+// ROUTES
+// -----
+require('./routes/auth.routes')(app); // Authentication for both dashboad users and nornam app users
+require('./routes/member.routes')(app); // All routes for mobile app / normal users 
+require('./routes/dashboard.routes')(app)  // All routes for dashboard users
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
