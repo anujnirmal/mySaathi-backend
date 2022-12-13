@@ -8,6 +8,7 @@ var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
 exports.member_sign_in = async (req, res) => {
+
   const { aadhaar_number, mobile_number, device_id } = req.body;
 
   // TODO: limit the number of devices a user can login in
@@ -83,6 +84,7 @@ exports.member_sign_in = async (req, res) => {
       let refreshToken = await RefreshToken.createToken(
         config.member_jwt_refreshexpiration // pass in the refresh token expiry for member
       );
+
 
       await prisma.refresh_tokens
         .findFirst({
@@ -217,10 +219,12 @@ exports.member_log_out = async (req, res) => {
 // thus when an user logs in then the jwt token's invalidate before and
 // refresh_tokens
 exports.member_log_out_from_all_devices = async (req, res) => {
-  const { mobile_number, access_token } = req.body;
+  const { mobile_number } = req.body;
 
+  // Length for validation
   const MOBILE_NUMBER_LENGTH = 10;
 
+  // validate the request 
   if (mobile_number.toString().length != MOBILE_NUMBER_LENGTH) {
     return res
       .json({
@@ -239,6 +243,7 @@ exports.member_log_out_from_all_devices = async (req, res) => {
       },
     })
     .then(async (member) => {
+      // delete all the 
       await prisma.members
         .update({
           where: {

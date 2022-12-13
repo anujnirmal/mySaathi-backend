@@ -14,7 +14,7 @@ module.exports = function(app) {
 
   // CRUD for Dashboard users
   app.post("/api/admin/create_dashboard_user", controller.create_dashboard_user);
-  app.put("/api/admin/update_dashboard_password", controller.update_dashboard_password);
+  app.put("/api/admin/update_dashboard_password", [authJwt.verifyToken, authJwt.isAdmin], controller.update_dashboard_password);
   app.delete("/api/admin/delete_dashboard_user", controller.delete_dashboard_user);
 
   // CRUD for members

@@ -34,7 +34,7 @@ exports.dashboard_sign_in = (req, res) => {
           .send();
       }
 
-      let token = jwt.sign({ email: dashboard_user.email_id }, config.secret, {
+      let token = jwt.sign({ dashboard_user_id: dashboard_user.id, role: dashboard_user.role }, config.secret, {
         expiresIn: config.admin_jwt_expiration,
       });
 
