@@ -122,6 +122,58 @@ exports.create_member = async (req, res) => {
     address,
   } = req.body;
 
+  const AADHAAR_LENGTH = 12;
+  const MOBILE_NUMBER_LENGTH = 10;
+  const PAN_CARD_LENGTH = 10;
+  const FULL_NAME_LENGTH = 3;
+  const ADDRESS_NAME_LENGTH = 10;
+
+  if (aadhaar_number.toString().length != AADHAAR_LENGTH) {
+    return res
+      .json({
+        message: "Please enter a valid Aadhaar number",
+      })
+      .status(404)
+      .send();
+  }
+
+  if (mobile_number.toString().length != MOBILE_NUMBER_LENGTH) {
+    return res
+      .json({
+        message: "Please enter a valid Mobile number",
+      })
+      .status(404)
+      .send();
+  }
+
+  if (pancard_number.length != PAN_CARD_LENGTH) {
+    return res
+      .json({
+        message: "Please enter a valid Pancard number",
+      })
+      .status(404)
+      .send();
+  }
+
+
+  if (!(full_name.length > FULL_NAME_LENGTH)) {
+    return res
+      .json({
+        message: "Full name should be greater than " + FULL_NAME_LENGTH ,
+      })
+      .status(404)
+      .send();
+  }
+
+  if (!(address.length > ADDRESS_NAME_LENGTH)) {
+    return res
+      .json({
+        message: "Address should be greater than " + ADDRESS_NAME_LENGTH ,
+      })
+      .status(404)
+      .send();
+  }
+
   await prisma.members
     .create({
       data: {

@@ -112,7 +112,7 @@ exports.member_refreshToken = async (req, res) => {
       }
 
       let new_access_token = jwt.sign(
-        { mobile_number: member.mobile_number },
+        { mobile_number: member.mobile_number  },
         config.secret,
         {
           expiresIn: config.member_jwt_expiration,

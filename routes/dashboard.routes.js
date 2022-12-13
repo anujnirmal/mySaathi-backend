@@ -1,4 +1,4 @@
-const { verifySignUp } = require("../middleware");
+const { verifySignUp, authJwt } = require("../middleware");
 const controller = require("../controllers/admin.usercontrol.controller");
 const dashboard_auth_controller = require("../controllers/auth/dashboard.auth.controller");
 
@@ -18,7 +18,11 @@ module.exports = function(app) {
   app.delete("/api/admin/delete_dashboard_user", controller.delete_dashboard_user);
 
   // CRUD for members
-  app.post("/api/admin/create_member", controller.create_member);
+  app.post(
+    "/api/admin/create_member", 
+    authJwt.verifyToken,
+    controller.create_member
+  );
   app.put("/api/admin/update_member", controller.update_dashboard_password);
   app.delete("/api/admin/delete_member", controller.delete_dashboard_user);
 

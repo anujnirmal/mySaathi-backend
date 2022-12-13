@@ -55,12 +55,16 @@ model members {
 }
 
 
+// Change device id to be unique 
+// and invalidate_before and device id to be mandatory
 model refresh_tokens {
   id                  Int                     @id @default(autoincrement())
   refresh_token       String                  @unique
   expiry_at           DateTime
   member              members                 @relation(fields: [member_id], references: [id])
   member_id           Int
+  device_id           String?                  @unique
+  invalidate_before   DateTime?
 }
 
 
