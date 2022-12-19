@@ -6,167 +6,242 @@ const prisma = db.prisma;
 
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
+const { default: axios } = require("axios");
 
-exports.member_sign_in = async (req, res) => {
+// Members can request a new otp during login process
+exports.member_get_otp = async (req, res) => {
+  const { mobile_number } = req.body;
 
-  const { aadhaar_number, mobile_number, device_id } = req.body;
-
-  // TODO: limit the number of devices a user can login in
-
-  // Some basic validation
-  // Aadhaar number should be 12 digits only as specified by the govt
-  // Incase this changes in future update it here
-  const AADHAAR_LENGTH = 12;
-  const MOBILE_NUMBER_LENGTH = 10;
-  const DEVICE_ID_LENGTH = 8;
-
-  if (aadhaar_number.toString().length != AADHAAR_LENGTH) {
+  if (mobile_number.length != 10) {
     return res
-      .json({
-        message: "Please enter a valid Aadhaar number",
-      })
-      .status(404)
+      .json({ message: "Mobile number should be 10 digits long" })
+      .status(400)
       .send();
   }
 
-  if (mobile_number.toString().length != MOBILE_NUMBER_LENGTH) {
-    return res
-      .json({
-        message: "Please enter a valid mobile number",
-      })
-      .status(404)
-      .send();
-  }
-
-  if (device_id.length != DEVICE_ID_LENGTH) {
-    return res
-      .json({
-        message: "Please enter a valid device id",
-      })
-      .status(404)
-      .send();
-  }
+  // Add template id recieved from msg91's dashboard
+  const template_id = "";
+  const get_otp_base_url = "https://api.msg91.com/api/v5/otp?";
+  const get_otp_url =
+    get_otp_base_url +
+    "template_id=" +
+    template_id +
+    "&mobile=" +
+    mobile_number +
+    "&authkey=" +
+    config.msg91_auth_key;
 
   await prisma.members
     .findUnique({
       where: { mobile_number: mobile_number },
     })
     .then(async (member) => {
+
       if (!member) {
-        return res
-          .status(404)
-          .send({ message: "Wrong aadhaar number or phone number" });
+        return res.status(404).send({ message: "Phone number not found" });
       }
 
-      // if aadhar number entered by user is != to the one stored in db
-      // I know this is not secure, but this is what they want :()
-      if (aadhaar_number != member.aadhaar_number) {
-        // auth not successfull
-        return res
-          .status(404)
-          .send({ message: "Wrong aadhaar number or phone number" });
-      }
-
-      let invalidate_before_date = new Date();
-
-      let token = jwt.sign(
-        {
-          mobile_number: member.mobile_number,
-          device_id: device_id,
-          invalidate_before: invalidate_before_date.getTime(),
-        },
-        config.secret,
-        {
-          expiresIn: config.member_jwt_expiration,
-        }
-      );
-
-      let refreshToken = await RefreshToken.createToken(
-        config.member_jwt_refreshexpiration // pass in the refresh token expiry for member
-      );
-
-
-      await prisma.refresh_tokens
-        .findFirst({
-          where: {
-            device_id: device_id,
-          },
+      // If member found
+      axios
+        .get(get_otp_url)
+        .then((response) => {
+          console.log(response);
+          return res
+            .status(200)
+            .json({ message: "OTP sent successfully" })
+            .send();
         })
-        .then(async (result) => {
-          //if device found
-          if (result) {
-            await prisma.refresh_tokens
-              .update({
-                where: {
-                  device_id: device_id,
-                },
-                data: {
-                  refresh_token: refreshToken.token,
-                  expiry_at: refreshToken.expiry_at,
-                  invalidate_before: invalidate_before_date,
-                },
-              })
-              .then((result) => {
-                return res
-                  .json({
-                    id: member.id,
-                    mobile_number: member.mobile_number,
-                    access_token: token,
-                    refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
-                  })
-                  .status(200)
-                  .send();
-              })
-              .catch((err) => {
-                console.log(err);
-                return res
-                  .json({ message: "Internal server error" })
-                  .status(500)
-                  .send();
-              });
-          } else {
-            // if device id is not found
-            await prisma.refresh_tokens
-              .create({
-                data: {
-                  refresh_token: refreshToken.token,
-                  expiry_at: refreshToken.expiry_at,
-                  device_id: device_id,
-                  invalidate_before: invalidate_before_date,
-                  member: {
-                    connect: {
-                      id: member.id,
-                    },
-                  },
-                },
-              })
-              .then((result) => {
-                return res
-                  .json({
-                    id: member.id,
-                    mobile_number: member.mobile_number,
-                    access_token: token,
-                    refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
-                  })
-                  .status(200)
-                  .send();
-              })
-              .catch((err) => {
-                return res
-                  .json({ message: "Internal server error" })
-                  .status(500)
-                  .send();
-              });
-          }
+        .catch((err) => {
+          console.log(err);
+          return res
+            .status(500)
+            .json({ message: "Internal Server Error" })
+            .send();
         });
 
-      // Save the refresh token in the db
+    })
+    .catch((err) => {
+      return res.status(500).json({ message: "Internal Server Error" }).send();
+    });
+};
+
+// Verify the otp entered by the members
+exports.member_verify_otp = async (req, res) => {
+  const { otp, mobile_number, device_id } = req.body;
+
+  // Add template id recieved from msg91's dashboard
+  // TODO: implement validation after getting dlt
+  const verify_otp_base_url = "https://api.msg91.com/api/v5/otp/verify?";
+  const verify_otp_url =
+    verify_otp_base_url +
+    "otp=" +
+    otp +
+    "&authkey=" +
+    config.msg91_auth_key +
+    "&mobile=" +
+    mobile_number;
+
+  try {
+    const result = await axios.get(verify_otp_url);
+
+    if (result.type != "success") {
+      // TODO: implement error validation
+      return res.status(500).json({ message: "Internal Server Error" }).send();
+    }
+
+    // If success then
+    await prisma.members
+      .findUnique({
+        where: { mobile_number: mobile_number },
+      })
+      .then(async (member) => {
+        if (!member) {
+          return res.status(404).send({ message: "Phone number" });
+        }
+
+        let invalidate_before_date = new Date();
+
+        let token = jwt.sign(
+          {
+            mobile_number: member.mobile_number,
+            device_id: device_id,
+            invalidate_before: invalidate_before_date.getTime(),
+          },
+          config.secret,
+          {
+            expiresIn: config.member_jwt_expiration,
+          }
+        );
+
+        let refreshToken = await RefreshToken.createToken(
+          config.member_jwt_refreshexpiration // pass in the refresh token expiry for member
+        );
+
+        await prisma.refresh_tokens
+          .findFirst({
+            where: {
+              device_id: device_id,
+            },
+          })
+          .then(async (result) => {
+            //if device found
+            if (result) {
+              await prisma.refresh_tokens
+                .update({
+                  where: {
+                    device_id: device_id,
+                  },
+                  data: {
+                    refresh_token: refreshToken.token,
+                    expiry_at: refreshToken.expiry_at,
+                    invalidate_before: invalidate_before_date,
+                  },
+                })
+                .then((result) => {
+                  return res
+                    .json({
+                      id: member.id,
+                      mobile_number: member.mobile_number,
+                      access_token: token,
+                      refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
+                    })
+                    .status(200)
+                    .send();
+                })
+                .catch((err) => {
+                  console.log(err);
+                  return res
+                    .json({ message: "Internal server error" })
+                    .status(500)
+                    .send();
+                });
+            } else {
+              // if device id is not found
+              await prisma.refresh_tokens
+                .create({
+                  data: {
+                    refresh_token: refreshToken.token,
+                    expiry_at: refreshToken.expiry_at,
+                    device_id: device_id,
+                    invalidate_before: invalidate_before_date,
+                    member: {
+                      connect: {
+                        id: member.id,
+                      },
+                    },
+                  },
+                })
+                .then((result) => {
+                  return res
+                    .json({
+                      id: member.id,
+                      mobile_number: member.mobile_number,
+                      access_token: token,
+                      refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
+                    })
+                    .status(200)
+                    .send();
+                })
+                .catch((err) => {
+                  return res
+                    .json({ message: "Internal server error" })
+                    .status(500)
+                    .send();
+                });
+            }
+          });
+
+        // Save the refresh token in the db
+      })
+      .catch((err) => {
+        console.log(err);
+        return res.status(500).send({ message: "Internal server error" });
+      });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Internal Server Error" }).send();
+  }
+};
+
+// Members can request the otp again
+exports.member_resend_otp = async (req, res) => {
+  const { mobile_number } = req.body;
+
+  if (mobile_number.length != 10) {
+    return res
+      .json({ message: "Mobile number should be 10 digits long" })
+      .status(400)
+      .send();
+  }
+
+  // Add template id recieved from msg91's dashboard
+  const retry_type = "text"; //or set it to voice
+  const resend_otp_base_url = "https://api.msg91.com/api/v5/otp/retry?";
+  const resend_otp_url =
+    resend_otp_base_url +
+    "authkey=" +
+    config.msg91_auth_key +
+    "&retrytype=" +
+    retry_type +
+    "&mobile=" +
+    mobile_number;
+
+  axios
+    .get(get_otp_url)
+    .then((response) => {
+      console.log(response);
+      // TODO: get the otp and send it
+      return res
+        .status(200)
+        .json({ message: "OTP resent successfully" })
+        .send();
     })
     .catch((err) => {
       console.log(err);
-      return res.status(500).send({ message: "Internal server error" });
+      return res.status(500).json({ message: "Internal Server Error" }).send();
     });
 };
+
 
 // Member logs out
 // TODO: remove refresh token from the db
@@ -213,6 +288,7 @@ exports.member_log_out = async (req, res) => {
     });
 };
 
+
 // Member logs out from all devices
 // Search in the "refresh_tokens" table and update all the invalidate_before
 // field to current time
@@ -224,7 +300,7 @@ exports.member_log_out_from_all_devices = async (req, res) => {
   // Length for validation
   const MOBILE_NUMBER_LENGTH = 10;
 
-  // validate the request 
+  // validate the request
   if (mobile_number.toString().length != MOBILE_NUMBER_LENGTH) {
     return res
       .json({
@@ -243,7 +319,7 @@ exports.member_log_out_from_all_devices = async (req, res) => {
       },
     })
     .then(async (member) => {
-      // delete all the 
+      // delete all the
       await prisma.members
         .update({
           where: {
@@ -268,3 +344,180 @@ exports.member_log_out_from_all_devices = async (req, res) => {
       return res.status(500).json({ message: "Internal server error" }).send();
     });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// exports.member_sign_in = async (req, res) => {
+
+//   const { aadhaar_number, mobile_number, device_id } = req.body;
+
+//   // TODO: limit the number of devices a user can login in
+
+//   // Some basic validation
+//   // Aadhaar number should be 12 digits only as specified by the govt
+//   // Incase this changes in future update it here
+//   const AADHAAR_LENGTH = 12;
+//   const MOBILE_NUMBER_LENGTH = 10;
+//   const DEVICE_ID_LENGTH = 8;
+
+//   if (aadhaar_number.toString().length != AADHAAR_LENGTH) {
+//     return res
+//       .json({
+//         message: "Please enter a valid Aadhaar number",
+//       })
+//       .status(404)
+//       .send();
+//   }
+
+//   if (mobile_number.toString().length != MOBILE_NUMBER_LENGTH) {
+//     return res
+//       .json({
+//         message: "Please enter a valid mobile number",
+//       })
+//       .status(404)
+//       .send();
+//   }
+
+//   if (device_id.length != DEVICE_ID_LENGTH) {
+//     return res
+//       .json({
+//         message: "Please enter a valid device id",
+//       })
+//       .status(404)
+//       .send();
+//   }
+
+//   await prisma.members
+//     .findUnique({
+//       where: { mobile_number: mobile_number },
+//     })
+//     .then(async (member) => {
+//       if (!member) {
+//         return res
+//           .status(404)
+//           .send({ message: "Wrong aadhaar number or phone number" });
+//       }
+
+//       // if aadhar number entered by user is != to the one stored in db
+//       // I know this is not secure, but this is what they want :()
+//       if (aadhaar_number != member.aadhaar_number) {
+//         // auth not successfull
+//         return res
+//           .status(404)
+//           .send({ message: "Wrong aadhaar number or phone number" });
+//       }
+
+//       let invalidate_before_date = new Date();
+
+//       let token = jwt.sign(
+//         {
+//           mobile_number: member.mobile_number,
+//           device_id: device_id,
+//           invalidate_before: invalidate_before_date.getTime(),
+//         },
+//         config.secret,
+//         {
+//           expiresIn: config.member_jwt_expiration,
+//         }
+//       );
+
+//       let refreshToken = await RefreshToken.createToken(
+//         config.member_jwt_refreshexpiration // pass in the refresh token expiry for member
+//       );
+
+//       await prisma.refresh_tokens
+//         .findFirst({
+//           where: {
+//             device_id: device_id,
+//           },
+//         })
+//         .then(async (result) => {
+//           //if device found
+//           if (result) {
+//             await prisma.refresh_tokens
+//               .update({
+//                 where: {
+//                   device_id: device_id,
+//                 },
+//                 data: {
+//                   refresh_token: refreshToken.token,
+//                   expiry_at: refreshToken.expiry_at,
+//                   invalidate_before: invalidate_before_date,
+//                 },
+//               })
+//               .then((result) => {
+//                 return res
+//                   .json({
+//                     id: member.id,
+//                     mobile_number: member.mobile_number,
+//                     access_token: token,
+//                     refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
+//                   })
+//                   .status(200)
+//                   .send();
+//               })
+//               .catch((err) => {
+//                 console.log(err);
+//                 return res
+//                   .json({ message: "Internal server error" })
+//                   .status(500)
+//                   .send();
+//               });
+//           } else {
+//             // if device id is not found
+//             await prisma.refresh_tokens
+//               .create({
+//                 data: {
+//                   refresh_token: refreshToken.token,
+//                   expiry_at: refreshToken.expiry_at,
+//                   device_id: device_id,
+//                   invalidate_before: invalidate_before_date,
+//                   member: {
+//                     connect: {
+//                       id: member.id,
+//                     },
+//                   },
+//                 },
+//               })
+//               .then((result) => {
+//                 return res
+//                   .json({
+//                     id: member.id,
+//                     mobile_number: member.mobile_number,
+//                     access_token: token,
+//                     refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
+//                   })
+//                   .status(200)
+//                   .send();
+//               })
+//               .catch((err) => {
+//                 return res
+//                   .json({ message: "Internal server error" })
+//                   .status(500)
+//                   .send();
+//               });
+//           }
+//         });
+
+//       // Save the refresh token in the db
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       return res.status(500).send({ message: "Internal server error" });
+//     });
+// };
+
+
+

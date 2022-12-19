@@ -16,7 +16,9 @@ module.exports = function(app) {
   // SIGNIN ROUTES FOR MEMBER AND ADMIN
   // -----
   app.post("/api/auth/admin/sign_in", dashboard_auth_controller.dashboard_sign_in); 
-  app.post("/api/auth/member/sign_in", member_auth_controller.member_sign_in);
+  app.post("/api/auth/member/get_otp", member_auth_controller.member_get_otp); //get a new otp
+  app.post("/api/auth/member/verify_otp", member_auth_controller.member_verify_otp); // verify the entered otp by members
+  app.post("/api/auth/member/resend_otp", member_auth_controller.member_resend_otp); // request a resend otp
   
   // -----
   // LOGOUT ROUTES FOR MEMBER
