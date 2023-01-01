@@ -12,6 +12,8 @@ datasource db {
 
 model dashboard_users {
   id         Int     @id @default(autoincrement())
+  // first_name String
+  // last_name  String
   email_id   String  @unique @db.VarChar(255)
   password   String
   role       DASHBOARD_ROLES  @default(ADMIN)
@@ -23,9 +25,8 @@ model dashboard_users {
 model news {
   id         Int      @id @default(autoincrement())
   title      String   @db.VarChar(255)
-  body       String
+  body       String?
   image_url  String?
-  news_url  String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
@@ -46,14 +47,61 @@ model members {
   id                  Int                     @id @default(autoincrement())
   ycf_id              String                  @unique @db.VarChar(255)
   full_name           String
-  mobile_number       BigInt                  @unique
-  aadhaar_number      BigInt                  @unique
+  mobile_number       String                  @unique
+  aadhaar_number      String                  @unique
   pancard_number      String                  @unique @db.VarChar(255)
   address             String
+  pincode             String                  
+  trashed             Boolean?
+  profile_photo       String?
+  children            children[]
   refresh_token       refresh_tokens[]
   notification        notifications[]  // member can have many notification
+  modules             MODULES_ACCESS[]
+  bank_detail         bank_details[]
 }
 
+model bank_details {
+  id                  Int                     @id @default(autoincrement())
+  bank_name           String                  @db.VarChar(255)
+  bank_account_number   String                  @db.VarChar(255)
+  ifsc_code           String                  @db.VarChar(255)
+  bank_branch_name    String                  @db.VarChar(255)
+  member              members                 @relation(fields: [member_id], references: [id])
+  member_id           Int
+}
+
+model children {
+  id                  Int                     @id @default(autoincrement())
+  child_name          String
+  school_college_name String
+  standard_grade      String
+  member              members                 @relation(fields: [member_id], references: [id])
+  member_id           Int
+}
+
+model ycf_id_counter {
+  id                  Int                     @id @default(autoincrement())
+  last_ycf_id         String        
+}
+
+
+
+model clinics {
+  id                  Int                     @id @default(autoincrement())
+  name                String
+  address             String
+  longitute           String
+  latitute            String
+}
+
+model hospitals {
+  id                  Int                     @id @default(autoincrement())
+  name                String
+  address             String
+  longitute           String
+  latitute            String
+}
 
 // Change device id to be unique 
 // and invalidate_before and device id to be mandatory
@@ -67,10 +115,22 @@ model refresh_tokens {
   invalidate_before   DateTime?
 }
 
+// model children {
+//   id                  Int                     @id @default(autoincrement())
+//   name                String                  
+//   college_name        String                  
+//   standard            String  
+// }
 
 enum DASHBOARD_ROLES {
   SUPERADMIN
   ADMIN
+}
+
+enum MODULES_ACCESS {
+  EDUCATION
+  MEDICAL
+  HOUSEHOLD
 }
 
 

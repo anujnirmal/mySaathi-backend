@@ -11,6 +11,8 @@ var bcrypt = require("bcryptjs");
 exports.dashboard_sign_in = (req, res) => {
   const { email, password } = req.body;
 
+  console.log(req.body);
+
   // Find dashboard user using the email passed
   prisma.dashboard_users
     .findUnique({
@@ -20,7 +22,7 @@ exports.dashboard_sign_in = (req, res) => {
 
       // If no user found then send 404
       if (!dashboard_user) {
-        return res.status(404).send({ message: "Dashboard user Not found." });
+        return res.status(404).send({ message: "Please enter correct email id and password" });
       }
 
       // Check for the password entered
@@ -29,14 +31,14 @@ exports.dashboard_sign_in = (req, res) => {
         dashboard_user.password
       );
       
+      
       // If password is not valid
       if (!passwordIsValid) {
-        return res
+        return res.status(404)
           .json({
             accessToken: null,
-            message: "Invalid Password!",
+            message: "Please enter correct email id and password",
           })
-          .status(401)
           .send();
       }
 
@@ -70,6 +72,7 @@ exports.dashboard_sign_in = (req, res) => {
         })
         .then((result) => {
           return res
+            .status(200)
             .json({
               id: dashboard_user.id,
               email: dashboard_user.email_id,
@@ -77,14 +80,13 @@ exports.dashboard_sign_in = (req, res) => {
               access_token: token,
               refresh_token: refreshToken.token,
             })
-            .status(200)
             .send();
         })
         .catch((err) => {
           console.log(err);
           return res
-            .json({ message: "Internal server error" })
             .status(500)
+            .json({ message: "Internal server error" })
             .send();
         });
     })

@@ -1,11 +1,12 @@
 const express = require("express");
+const cookieParser = require('cookie-parser');
 const cors = require("cors");
 
 const app = express();
 
-var corsOptions = {
-  origin: "http://localhost:8081"
-};
+// var corsOptions = {
+//   origin: "http://localhost:8081"
+// };
 
 // Setting globally, so the response containing BigInt datatype
 // can be serialized
@@ -13,13 +14,23 @@ BigInt.prototype.toJSON = function () {
   return this.toString();
 };
 
+const corsOptions ={
+  origin:'http://localhost:3000', 
+  credentials:true,
+  optionsSuccessStatus: 200
+}
+
 app.use(cors(corsOptions));
+app.options('*', cors())
 
 // parse requests of content-type - application/json
 app.use(express.json());
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
+
+//middleware for cookies
+app.use(cookieParser());
 
 // Test Route
 app.get("/", (req, res) => {

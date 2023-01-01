@@ -1,7 +1,7 @@
 const { authJwt } = require("../middleware");
 const controller = require("../controllers/userControl/admin.usercontrol.controller");
-const news_controller = require("../controllers/services/news.service.controller");
-const notification_controller = require("../controllers/services/notification.service.controller");
+const news_controller = require("../controllers/news/news.controller");
+const notification_controller = require("../controllers/notification/notification.controller");
 
 module.exports = function(app) {
   app.use(function(req, res, next) {
@@ -23,15 +23,23 @@ module.exports = function(app) {
 
   // TODO: Make a route to get all the members
   // -----
-  // CRUD FOR MEMBERS
+  // CRUD FOR MEMBERS : Beneficiary - on admin dashboard
   // -----
+  app.post("/api/admin/get_all_members", authJwt.verifyToken, controller.get_all_members);
+  app.post("/api/admin/get_all_deleted_members", authJwt.verifyToken, controller.get_all_deleted_members);
   app.post("/api/admin/create_member", authJwt.verifyToken, controller.create_member);
-  app.put("/api/admin/update_member", controller.update_dashboard_password);
-  app.delete("/api/admin/delete_member", controller.delete_dashboard_user);
+  app.put("/api/admin/update_member", authJwt.verifyToken, controller.update_member);
+  app.delete("/api/admin/delete_members", authJwt.verifyToken, controller.delete_members);
+  app.delete("/api/admin/delete_child", authJwt.verifyToken, controller.delete_child);
+  app.post("/api/admin/restore_members", authJwt.verifyToken, controller.restore_members);
+  // TODO: endpoints for updating and change the rest verbs
+  // app.put("/api/admin/update_member", controller.update_dashboard_password);
+  // app.delete("/api/admin/delete_member", controller.delete_dashboard_user);
 
   // -----
   // NEWS
   // -----
+  app.post("/api/news/get_all_news", authJwt.verifyToken, news_controller.get_all_news);
   app.post("/api/news/create_news", authJwt.verifyToken, news_controller.create_news);
   app.put("/api/news/update_news", authJwt.verifyToken, news_controller.update_news);
   app.delete("/api/news/delete_news", authJwt.verifyToken, news_controller.delete_news);

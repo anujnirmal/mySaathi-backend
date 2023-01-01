@@ -9,7 +9,7 @@ var jwt = require("jsonwebtoken");
 // refresh token generation for dashboard users
 exports.dashboard_refreshToken = async (req, res) => {
   const { email, refresh_token: request_token } = req.body;
-
+  console.log(req.body);
   if (request_token == null) {
     return res.status(403).json({ message: "Refresh Token is required!" });
   }

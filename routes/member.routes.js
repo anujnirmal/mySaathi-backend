@@ -1,6 +1,6 @@
 const { authJwt } = require("../middleware");
-const news_controller = require("../controllers/services/news.service.controller");
-const notification_controller = require("../controllers/services/notification.service.controller");
+const news_controller = require("../controllers/news/news.controller");
+const notification_controller = require("../controllers/notification/notification.controller");
 
 module.exports = function (app) {
   app.use(function (req, res, next) {
@@ -15,7 +15,7 @@ module.exports = function (app) {
   // -----
   // NEWS
   // -----
-  app.get("/api/news/get_all_news", authJwt.verifyToken, news_controller.get_all_news);
+  // app.get("/api/news/get_all_news", authJwt.verifyToken, news_controller.get_all_news);
 
   // -----
   // NOTIFICATION

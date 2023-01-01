@@ -73,6 +73,7 @@ const isJWTInvalidate = async (decoded_value) => {
     }
   } catch (err) {
     console.log(err);
+    return;
   }
 };
 
