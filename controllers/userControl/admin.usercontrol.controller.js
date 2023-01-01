@@ -1,6 +1,7 @@
 const db = require("../../models");
 const config = require("../../config/auth.config");
 const RefreshToken = require("../refreshToken/refreshToken");
+const logger = require("../../logger/logger")
 
 const prisma = db.prisma;
 
@@ -93,14 +94,14 @@ exports.delete_dashboard_user = async (req, res) => {
       },
     })
     .then((user) => {
-      console.log(user);
+      logger.info(user);
       res
         .json({ message: "Successfully created " + role + " user" })
         .status(201)
         .send();
     })
     .catch((err) => {
-      console.log(err);
+      logger.error(err)
       res
         .json({ message: "Internal Server Error " + err })
         .status(500)
@@ -144,6 +145,7 @@ exports.create_member = async (req, res) => {
   const ADDRESS_NAME_LENGTH = 10;
 
   if (aadhaar_number.toString().length != AADHAAR_LENGTH) {
+    logger.error("Invalid aadhaar number")
     return res
       .status(404)
       .json({
@@ -153,6 +155,7 @@ exports.create_member = async (req, res) => {
   }
 
   if (mobile_number.toString().length != MOBILE_NUMBER_LENGTH) {
+    logger.error("Invalid mobile number")
     return res
       .status(404)
       .json({
@@ -162,6 +165,7 @@ exports.create_member = async (req, res) => {
   }
 
   if (pancard_number.length != PAN_CARD_LENGTH) {
+    logger.error("Invalid pancard number")
     return res
       .status(404)
       .json({
@@ -172,6 +176,7 @@ exports.create_member = async (req, res) => {
   }
 
   if (!(full_name.length > FULL_NAME_LENGTH)) {
+    logger.error("Full name should be greater than " + FULL_NAME_LENGTH)
     return res
       .status(404)
       .json({
@@ -182,6 +187,7 @@ exports.create_member = async (req, res) => {
   }
 
   if (!(address.length > ADDRESS_NAME_LENGTH)) {
+    logger.error("Address should be greater than " + ADDRESS_NAME_LENGTH)
     return res
       .status(404)
       .json({
@@ -191,10 +197,7 @@ exports.create_member = async (req, res) => {
       .send();
   }
 
-  // let ycf_id = 211127;
-
   // create child object
-
   let childrenNew = [];
 
   for (let i = 0; i < children.length; i++) {
@@ -220,11 +223,11 @@ exports.create_member = async (req, res) => {
       last_ycf_id = ycf.last_ycf_id;
     })
     .catch((err) => {
-      console.log(err);
+      logger.error(err)
+      return res.status(500).json({message: "Internal Server Error"}).send();
     });
-  console.log("Last ID" + last_ycf_id);
+
   let new_ycf_id = incrementString(last_ycf_id);
-  console.log("NEw ycf id" + new_ycf_id);
 
   await prisma.members
     .create({
@@ -273,6 +276,7 @@ exports.create_member = async (req, res) => {
           );
         })
         .catch((err) => {
+          logger.error(err)
           return res
             .status(500)
             .json({ message: " Internal Server Error" })
@@ -280,7 +284,7 @@ exports.create_member = async (req, res) => {
         });
     })
     .catch((err) => {
-      console.log(err);
+      logger.error(err);
       // P2002 user already exists
       if (err.code == "P2002") {
         // 409 = already exists
@@ -321,6 +325,7 @@ exports.update_member = async (req, res) => {
   const ADDRESS_NAME_LENGTH = 10;
 
   if (aadhaar_number.toString().length != AADHAAR_LENGTH) {
+    logger.error("Input Validation failed")
     return res
       .status(404)
       .json({
@@ -330,6 +335,7 @@ exports.update_member = async (req, res) => {
   }
 
   if (mobile_number.toString().length != MOBILE_NUMBER_LENGTH) {
+    logger.error("Input Validation failed")
     return res
       .status(404)
       .json({
@@ -339,6 +345,7 @@ exports.update_member = async (req, res) => {
   }
 
   if (pancard_number.length != PAN_CARD_LENGTH) {
+    logger.error("Input Validation failed")
     return res
       .status(404)
       .json({
@@ -349,6 +356,7 @@ exports.update_member = async (req, res) => {
   }
 
   if (!(full_name.length > FULL_NAME_LENGTH)) {
+    logger.error("Input Validation failed")
     return res
       .status(404)
       .json({
@@ -359,6 +367,7 @@ exports.update_member = async (req, res) => {
   }
 
   if (!(address.length > ADDRESS_NAME_LENGTH)) {
+    logger.error("Input Validation failed")
     return res
       .status(404)
       .json({
@@ -399,8 +408,6 @@ exports.update_member = async (req, res) => {
       },
     })
     .then(async (member) => {
-      console.log(member);
-
       // Upadte or create New Children
       let childrenUpdateResul;
       try {
@@ -433,6 +440,7 @@ exports.update_member = async (req, res) => {
             .send()
         );
       } catch (err) {
+        logger.error(err)
         return res
           .status(500)
           .json({ message: "Internal Server Error" })
@@ -440,7 +448,7 @@ exports.update_member = async (req, res) => {
       }
     })
     .catch((err) => {
-      console.log(err);
+      logger.error(err)
       // P2002 user already exists
       if (err.code == "P2002") {
         // 409 = already exists
@@ -465,11 +473,10 @@ exports.get_all_members = async (req, res) => {
       },
     })
     .then((member) => {
-      console.log(member);
       return res.status(200).json({ message: "success", data: member }).send();
     })
     .catch((err) => {
-      console.log(err);
+      logger.error(err);
       return res.status(500).json({ message: "Internal Server Error" }).send();
     });
 };
@@ -490,7 +497,7 @@ exports.get_all_deleted_members = async (req, res) => {
       return res.status(200).json({ message: "success", data: member }).send();
     })
     .catch((err) => {
-      console.log(err);
+      logger.error(err);
       return res.status(500).json({ message: "Internal Server Error" }).send();
     });
 };
@@ -527,7 +534,7 @@ exports.delete_members = async (req, res) => {
         .send();
     })
     .catch((err) => {
-      console.log(err);
+      logger.error(err);
       return res.status(500).json({ message: "Intenral Server Error" }).send();
     });
 };
@@ -535,8 +542,7 @@ exports.delete_members = async (req, res) => {
 // Delete child
 exports.delete_child = async (req, res) => {
   const { child_id } = req.body;
-  console.log(req.body);
-
+  
   if (child_id === null || child_id === undefined) {
     return res.status(404).json({ message: "No Ids found" }).send();
   }
@@ -556,7 +562,7 @@ exports.delete_child = async (req, res) => {
         .send();
     })
     .catch((err) => {
-      console.log(err);
+      logger.error(err);
       if (err.code == "P2025") {
         return res.status(404).json({ message: "Not Found" }).send();
       }
@@ -567,7 +573,6 @@ exports.delete_child = async (req, res) => {
 // Restore one or many members
 exports.restore_members = async (req, res) => {
   const { members_id } = req.body;
-  console.log(req.body);
 
   if (members_id === null || members_id === undefined) {
     return res.status(404).json({ message: "No Ids found" }).send();
@@ -585,7 +590,6 @@ exports.restore_members = async (req, res) => {
       },
     })
     .then((news) => {
-      console.log(news);
       // news.count == 0 : record not found or none deleted
       if (news.count == 0) {
         return res.status(404).json({ message: "Record not found" }).send();
@@ -596,7 +600,7 @@ exports.restore_members = async (req, res) => {
         .send();
     })
     .catch((err) => {
-      console.log(err);
+      logger.log(err);
       return res.status(500).json({ message: "Intenral Server Error" }).send();
     });
 };
