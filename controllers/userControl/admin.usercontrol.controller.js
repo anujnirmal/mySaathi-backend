@@ -2,11 +2,13 @@ const db = require("../../models");
 const config = require("../../config/auth.config");
 const RefreshToken = require("../refreshToken/refreshToken");
 const logger = require("../../logger/logger")
+const { converToUTCToDate } = require("../../helper/helper.functions");
 
 const prisma = db.prisma;
 
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
+const { log } = require("winston");
 
 const incrementString = (text) => {
   return text.replace(/(\d*)$/, (_, t) =>
@@ -20,13 +22,21 @@ const incrementString = (text) => {
 
 // Create User who can login in Admin Dashboard
 exports.create_dashboard_user = async (req, res) => {
-  const { email, password, role } = req.body;
+  const { 
+    first_name,
+    last_name,
+    email, 
+    password, 
+    role 
+  } = req.body;
 
   // role = SUPERADMIN, ADMIN
 
   await prisma.dashboard_users
     .create({
       data: {
+        first_name,
+        last_name,
         email_id: email,
         password: bcrypt.hashSync(password, 8),
         role: role,
@@ -470,6 +480,7 @@ exports.get_all_members = async (req, res) => {
       include: {
         bank_detail: true,
         children: true,
+        member_bank_transaction: true,
       },
     })
     .then((member) => {

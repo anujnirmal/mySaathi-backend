@@ -2,6 +2,7 @@ const { authJwt } = require("../middleware");
 const controller = require("../controllers/userControl/admin.usercontrol.controller");
 const news_controller = require("../controllers/news/news.controller");
 const notification_controller = require("../controllers/notification/notification.controller");
+const transaction_controller = require("../controllers/transactions/transaction.controller");
 
 module.exports = function(app) {
   app.use(function(req, res, next) {
@@ -55,6 +56,13 @@ module.exports = function(app) {
   // NOTIFICATION
   // -----
   app.post("/api/notification/create_notifications", authJwt.verifyToken, notification_controller.create_notification);
+
+  // -----
+  // TRANSACTIONS
+  // -----
+  app.post("/api/transactions/create_transaction", authJwt.verifyToken, transaction_controller.create_member_transaction);
+  app.post("/api/transactions/get_transactions", authJwt.verifyToken, transaction_controller.get_transaction_data);
+
 
 };
 

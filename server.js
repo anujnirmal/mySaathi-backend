@@ -1,8 +1,11 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
 const cors = require("cors");
+require('dotenv').config();
 
 const app = express();
+
+// TODO: setup env
 
 // var corsOptions = {
 //   origin: "http://localhost:8081"

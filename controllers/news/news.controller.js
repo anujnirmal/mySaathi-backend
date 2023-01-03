@@ -1,29 +1,30 @@
 const db = require("../../models");
+const {converToUTCToDate} = require("../../helper/helper.functions");
 
 const prisma = db.prisma; // Creating an instance of the databse
 
-const convertUTCToDate = (news, data) => {
-  for (let i = 0; i < news.length; i++) {
-    let createdUTCDate = news[i].created_at;
-    let updatedOnUTCDate = news[i].updated_at;
+// const converToUTCToDate = (news, data) => {
+//   for (let i = 0; i < news.length; i++) {
+//     let createdUTCDate = news[i].created_at;
+//     let updatedOnUTCDate = news[i].updated_at;
 
-    let createdDate =
-      createdUTCDate.getDate() +
-      "/" +
-      createdUTCDate.getMonth() +
-      "/" +
-      createdUTCDate.getFullYear();
-    let updatedOnDate =
-      updatedOnUTCDate.getDate() +
-      "/" +
-      updatedOnUTCDate.getMonth() +
-      "/" +
-      updatedOnUTCDate.getFullYear();
+//     let createdDate =
+//       createdUTCDate.getDate() +
+//       "/" +
+//       createdUTCDate.getMonth() +
+//       "/" +
+//       createdUTCDate.getFullYear();
+//     let updatedOnDate =
+//       updatedOnUTCDate.getDate() +
+//       "/" +
+//       updatedOnUTCDate.getMonth() +
+//       "/" +
+//       updatedOnUTCDate.getFullYear();
 
-    data[i].created_at = createdDate;
-    data[i].updated_at = updatedOnDate;
-  }
-};
+//     data[i].created_at = createdDate;
+//     data[i].updated_at = updatedOnDate;
+//   }
+// };
 
 // Get all news
 // TODO: check if limiting the queries recieved is required
@@ -34,7 +35,7 @@ exports.get_all_news = async (req, res) => {
     .then((news) => {
       // console.log(news);
       let data = news;
-      convertUTCToDate(news, data);
+      converToUTCToDate(news, data);
       return res.status(200).json({ data: data }).send();
     })
     .catch((err) => {

@@ -75,6 +75,8 @@ exports.dashboard_sign_in = (req, res) => {
             .status(200)
             .json({
               id: dashboard_user.id,
+              first_name: dashboard_user.first_name,
+              last_name: dashboard_user.last_name,
               email: dashboard_user.email_id,
               role: dashboard_user.role,
               access_token: token,

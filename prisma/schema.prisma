@@ -11,16 +11,16 @@ datasource db {
 }
 
 model dashboard_users {
-  id         Int     @id @default(autoincrement())
-  // first_name String
-  // last_name  String
-  email_id   String  @unique @db.VarChar(255)
-  password   String
-  role       DASHBOARD_ROLES  @default(ADMIN)
-  refresh_token      String?
-  expiry_at DateTime?
+  id            Int             @id @default(autoincrement())
+  first_name    String?          @db.VarChar(255)
+  last_name     String?          @db.VarChar(255)
+  email_id      String          @unique @db.VarChar(255)
+  password      String
+  role          DASHBOARD_ROLES @default(ADMIN)
+  refresh_token String?
+  expiry_at     DateTime?
+  member_bank_transaction member_bank_transaction[]
 }
-
 
 model news {
   id         Int      @id @default(autoincrement())
@@ -32,95 +32,103 @@ model news {
 }
 
 model notifications {
-  id                  Int                     @id @default(autoincrement())
-  title               String                  @db.VarChar(255)
-  body                String
-  created_at          DateTime                @default(now())
-  updated_at          DateTime                @updatedAt
-  member              members[]      //one notification can have many members
+  id         Int       @id @default(autoincrement())
+  title      String    @db.VarChar(255)
+  body       String
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  member     members[] //one notification can have many members
 }
 
 // TODO: 
 // Link to bank details & transactions
 // Recheck datatypes
+// Recheck optional fields
 model members {
-  id                  Int                     @id @default(autoincrement())
-  ycf_id              String                  @unique @db.VarChar(255)
-  full_name           String
-  mobile_number       String                  @unique
-  aadhaar_number      String                  @unique
-  pancard_number      String                  @unique @db.VarChar(255)
-  address             String
-  pincode             String                  
-  trashed             Boolean?
-  profile_photo       String?
-  children            children[]
-  refresh_token       refresh_tokens[]
-  notification        notifications[]  // member can have many notification
-  modules             MODULES_ACCESS[]
-  bank_detail         bank_details[]
+  id                      Int                       @id @default(autoincrement())
+  ycf_id                  String                    @unique @db.VarChar(255)
+  full_name               String
+  mobile_number           String                    @unique
+  aadhaar_number          String                    @unique
+  pancard_number          String                    @unique @db.VarChar(255)
+  address                 String
+  pincode                 String
+  trashed                 Boolean?
+  profile_photo           String?
+  yearly_quota            String?
+  balance_amount          String?
+  children                children[]
+  refresh_token           refresh_tokens[]
+  notification            notifications[] // member can have many notification
+  modules                 MODULES_ACCESS[]
+  bank_detail             bank_details[]
+  member_bank_transaction member_bank_transaction[]
 }
 
 model bank_details {
-  id                  Int                     @id @default(autoincrement())
-  bank_name           String                  @db.VarChar(255)
-  bank_account_number   String                  @db.VarChar(255)
-  ifsc_code           String                  @db.VarChar(255)
-  bank_branch_name    String                  @db.VarChar(255)
-  member              members                 @relation(fields: [member_id], references: [id])
+  id                  Int     @id @default(autoincrement())
+  bank_name           String  @db.VarChar(255)
+  bank_account_number String  @db.VarChar(255)
+  ifsc_code           String  @db.VarChar(255)
+  bank_branch_name    String  @db.VarChar(255)
+  member              members @relation(fields: [member_id], references: [id])
   member_id           Int
 }
 
 model children {
-  id                  Int                     @id @default(autoincrement())
+  id                  Int     @id @default(autoincrement())
   child_name          String
   school_college_name String
   standard_grade      String
-  member              members                 @relation(fields: [member_id], references: [id])
+  member              members @relation(fields: [member_id], references: [id])
   member_id           Int
 }
 
 model ycf_id_counter {
-  id                  Int                     @id @default(autoincrement())
-  last_ycf_id         String        
+  id          Int    @id @default(autoincrement())
+  last_ycf_id String
 }
 
-
+model member_bank_transaction {
+  id                  Int     @id @default(autoincrement())
+  amount_requested    BigInt 
+  status              TRANSACTION_STATUS @default(PENDING)
+  transaction_date    DateTime?
+  module              MODULES_ACCESS?
+  admin_name          String?   
+  approved_by         dashboard_users @relation(fields: [admin_id], references: [id])
+  admin_id            Int
+  member              members @relation(fields: [member_id], references: [id])
+  member_id           Int
+}
 
 model clinics {
-  id                  Int                     @id @default(autoincrement())
-  name                String
-  address             String
-  longitute           String
-  latitute            String
+  id        Int    @id @default(autoincrement())
+  name      String
+  address   String
+  longitute String
+  latitute  String
 }
 
 model hospitals {
-  id                  Int                     @id @default(autoincrement())
-  name                String
-  address             String
-  longitute           String
-  latitute            String
+  id        Int    @id @default(autoincrement())
+  name      String
+  address   String
+  longitute String
+  latitute  String
 }
 
 // Change device id to be unique 
 // and invalidate_before and device id to be mandatory
 model refresh_tokens {
-  id                  Int                     @id @default(autoincrement())
-  refresh_token       String                  @unique
-  expiry_at           DateTime
-  member              members                 @relation(fields: [member_id], references: [id])
-  member_id           Int
-  device_id           String?                  @unique
-  invalidate_before   DateTime?
+  id                Int       @id @default(autoincrement())
+  refresh_token     String    @unique
+  expiry_at         DateTime
+  member            members   @relation(fields: [member_id], references: [id])
+  member_id         Int
+  device_id         String?   @unique
+  invalidate_before DateTime?
 }
-
-// model children {
-//   id                  Int                     @id @default(autoincrement())
-//   name                String                  
-//   college_name        String                  
-//   standard            String  
-// }
 
 enum DASHBOARD_ROLES {
   SUPERADMIN
@@ -133,42 +141,8 @@ enum MODULES_ACCESS {
   HOUSEHOLD
 }
 
-
-
-
-
-// Many to many relation between members and notification
-// model members_notifications {
-//   member          members       @relation(fields: [member_id], references: [id])
-//   member_id       Int
-//   notification    notifications @relation(fields: [notification_id], references: [id])
-//   notification_id Int
-
-//   @@id([member_id, notification_id])
-// }
-
-// model Post {
-//   id        Int      @id @default(autoincrement())
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-//   title     String   @db.VarChar(255)
-//   content   String?
-//   published Boolean  @default(false)
-//   author    User     @relation(fields: [authorId], references: [id])
-//   authorId  Int
-// }
-
-// model Profile {
-//   id     Int     @id @default(autoincrement())
-//   bio    String?
-//   user   User    @relation(fields: [userId], references: [id])
-//   userId Int     @unique
-// }
-
-// model User {
-//   id      Int      @id @default(autoincrement())
-//   email   String   @unique
-//   name    String?
-//   posts   Post[]
-//   profile Profile?
-// }
+enum TRANSACTION_STATUS {
+  APPROVED
+  REJECTED
+  PENDING
+}
