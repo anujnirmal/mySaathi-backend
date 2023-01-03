@@ -1,7 +1,7 @@
 const db = require("../../models");
 const config = require("../../config/auth.config");
 const RefreshToken = require("../refreshToken/refreshToken");
-const logger = require("../../logger/logger")
+const logger = require("../../logger/logger");
 const { converToUTCToDate } = require("../../helper/helper.functions");
 
 const prisma = db.prisma;
@@ -22,13 +22,7 @@ const incrementString = (text) => {
 
 // Create User who can login in Admin Dashboard
 exports.create_dashboard_user = async (req, res) => {
-  const { 
-    first_name,
-    last_name,
-    email, 
-    password, 
-    role 
-  } = req.body;
+  const { first_name, last_name, email, password, role } = req.body;
 
   // role = SUPERADMIN, ADMIN
 
@@ -111,7 +105,7 @@ exports.delete_dashboard_user = async (req, res) => {
         .send();
     })
     .catch((err) => {
-      logger.error(err)
+      logger.error(err);
       res
         .json({ message: "Internal Server Error " + err })
         .status(500)
@@ -155,7 +149,7 @@ exports.create_member = async (req, res) => {
   const ADDRESS_NAME_LENGTH = 10;
 
   if (aadhaar_number.toString().length != AADHAAR_LENGTH) {
-    logger.error("Invalid aadhaar number")
+    logger.error("Invalid aadhaar number");
     return res
       .status(404)
       .json({
@@ -165,7 +159,7 @@ exports.create_member = async (req, res) => {
   }
 
   if (mobile_number.toString().length != MOBILE_NUMBER_LENGTH) {
-    logger.error("Invalid mobile number")
+    logger.error("Invalid mobile number");
     return res
       .status(404)
       .json({
@@ -175,7 +169,7 @@ exports.create_member = async (req, res) => {
   }
 
   if (pancard_number.length != PAN_CARD_LENGTH) {
-    logger.error("Invalid pancard number")
+    logger.error("Invalid pancard number");
     return res
       .status(404)
       .json({
@@ -186,7 +180,7 @@ exports.create_member = async (req, res) => {
   }
 
   if (!(full_name.length > FULL_NAME_LENGTH)) {
-    logger.error("Full name should be greater than " + FULL_NAME_LENGTH)
+    logger.error("Full name should be greater than " + FULL_NAME_LENGTH);
     return res
       .status(404)
       .json({
@@ -197,7 +191,7 @@ exports.create_member = async (req, res) => {
   }
 
   if (!(address.length > ADDRESS_NAME_LENGTH)) {
-    logger.error("Address should be greater than " + ADDRESS_NAME_LENGTH)
+    logger.error("Address should be greater than " + ADDRESS_NAME_LENGTH);
     return res
       .status(404)
       .json({
@@ -205,19 +199,6 @@ exports.create_member = async (req, res) => {
       })
 
       .send();
-  }
-
-  // create child object
-  let childrenNew = [];
-
-  for (let i = 0; i < children.length; i++) {
-    let childObject = {};
-    for (let key in children[i]) {
-      if (key != "id") {
-        childObject[key] = children[i][key];
-      }
-    }
-    childrenNew[i] = childObject;
   }
 
   // console.log("new children" + JSON.stringify(childrenNew));
@@ -233,37 +214,77 @@ exports.create_member = async (req, res) => {
       last_ycf_id = ycf.last_ycf_id;
     })
     .catch((err) => {
-      logger.error(err)
-      return res.status(500).json({message: "Internal Server Error"}).send();
+      logger.error(err);
+      return res.status(500).json({ message: "Internal Server Error" }).send();
     });
 
   let new_ycf_id = incrementString(last_ycf_id);
 
-  await prisma.members
-    .create({
-      data: {
-        ycf_id: new_ycf_id,
-        full_name: full_name,
-        mobile_number: mobile_number.toString(),
-        aadhaar_number: aadhaar_number.toString(),
-        pancard_number: pancard_number,
-        profile_photo: profile_photo.toString(),
-        address: address,
-        pincode: pincode,
-        modules: modules,
-        trashed: false,
-        bank_detail: {
-          create: {
-            bank_name: bank_name,
-            bank_account_number: bank_account_number.toString(),
-            ifsc_code: ifsc_code,
-            bank_branch_name: bank_branch_name,
-          },
-        },
-        children: {
-          create: childrenNew,
+  let memberData = {};
+
+  if (children?.count === 0 || children === undefined) {
+    memberData = {
+      ycf_id: new_ycf_id,
+      full_name: full_name,
+      mobile_number: mobile_number.toString(),
+      aadhaar_number: aadhaar_number.toString(),
+      pancard_number: pancard_number,
+      profile_photo: profile_photo.toString(),
+      address: address,
+      pincode: pincode,
+      modules: modules,
+      trashed: false,
+      bank_detail: {
+        create: {
+          bank_name: bank_name,
+          bank_account_number: bank_account_number.toString(),
+          ifsc_code: ifsc_code,
+          bank_branch_name: bank_branch_name,
         },
       },
+    };
+  } else {
+    // create child object
+    let childrenNew = [];
+
+    for (let i = 0; i < children.length; i++) {
+      let childObject = {};
+      for (let key in children[i]) {
+        if (key != "id") {
+          childObject[key] = children[i][key];
+        }
+      }
+      childrenNew[i] = childObject;
+    }
+
+    memberData = {
+      ycf_id: new_ycf_id,
+      full_name: full_name,
+      mobile_number: mobile_number.toString(),
+      aadhaar_number: aadhaar_number.toString(),
+      pancard_number: pancard_number,
+      profile_photo: profile_photo.toString(),
+      address: address,
+      pincode: pincode,
+      modules: modules,
+      trashed: false,
+      bank_detail: {
+        create: {
+          bank_name: bank_name,
+          bank_account_number: bank_account_number.toString(),
+          ifsc_code: ifsc_code,
+          bank_branch_name: bank_branch_name,
+        },
+      },
+      children: {
+        create: childrenNew,
+      },
+    };
+  }
+
+  await prisma.members
+    .create({
+      data: memberData,
     })
     .then(async (member) => {
       // Update the number in the ycf counter
@@ -286,7 +307,7 @@ exports.create_member = async (req, res) => {
           );
         })
         .catch((err) => {
-          logger.error(err)
+          logger.error(err);
           return res
             .status(500)
             .json({ message: " Internal Server Error" })
@@ -335,7 +356,7 @@ exports.update_member = async (req, res) => {
   const ADDRESS_NAME_LENGTH = 10;
 
   if (aadhaar_number.toString().length != AADHAAR_LENGTH) {
-    logger.error("Input Validation failed")
+    logger.error("Input Validation failed");
     return res
       .status(404)
       .json({
@@ -345,7 +366,7 @@ exports.update_member = async (req, res) => {
   }
 
   if (mobile_number.toString().length != MOBILE_NUMBER_LENGTH) {
-    logger.error("Input Validation failed")
+    logger.error("Input Validation failed");
     return res
       .status(404)
       .json({
@@ -355,7 +376,7 @@ exports.update_member = async (req, res) => {
   }
 
   if (pancard_number.length != PAN_CARD_LENGTH) {
-    logger.error("Input Validation failed")
+    logger.error("Input Validation failed");
     return res
       .status(404)
       .json({
@@ -366,7 +387,7 @@ exports.update_member = async (req, res) => {
   }
 
   if (!(full_name.length > FULL_NAME_LENGTH)) {
-    logger.error("Input Validation failed")
+    logger.error("Input Validation failed");
     return res
       .status(404)
       .json({
@@ -377,7 +398,7 @@ exports.update_member = async (req, res) => {
   }
 
   if (!(address.length > ADDRESS_NAME_LENGTH)) {
-    logger.error("Input Validation failed")
+    logger.error("Input Validation failed");
     return res
       .status(404)
       .json({
@@ -450,7 +471,7 @@ exports.update_member = async (req, res) => {
             .send()
         );
       } catch (err) {
-        logger.error(err)
+        logger.error(err);
         return res
           .status(500)
           .json({ message: "Internal Server Error" })
@@ -458,7 +479,7 @@ exports.update_member = async (req, res) => {
       }
     })
     .catch((err) => {
-      logger.error(err)
+      logger.error(err);
       // P2002 user already exists
       if (err.code == "P2002") {
         // 409 = already exists
@@ -553,7 +574,7 @@ exports.delete_members = async (req, res) => {
 // Delete child
 exports.delete_child = async (req, res) => {
   const { child_id } = req.body;
-  
+
   if (child_id === null || child_id === undefined) {
     return res.status(404).json({ message: "No Ids found" }).send();
   }
