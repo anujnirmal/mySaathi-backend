@@ -1,5 +1,6 @@
 const db = require("../../models");
 const { converToUTCToDate } = require("../../helper/helper.functions");
+const logger = require("../../logger/logger");
 
 const prisma = db.prisma; // Creating an instance of the databse
 
@@ -57,8 +58,6 @@ exports.create_member_transaction = async (req, res) => {
     subtractFromBalance: subtract_from_balance,
   } = req.body;
 
-  console.log(req.body);
-
   // Check for response length
   if (amount_requested.length == 0) {
     // 422 - for validation error
@@ -107,9 +106,7 @@ exports.create_member_transaction = async (req, res) => {
     // Subtract the amount requested by the user by the member balance left
     member_balance = member_balance - amount_requested;
     // After subtraction if the value is below 0 then send an error to the frontend
-    console.log("Balance " + member_balance);
     if (member_balance < 0) {
-      console.log("here");
       return res.status(406).json({ message: "Member has " + member.balance_amount + " ruppes left"}).send();
     }
     // If after subtraction the value is above 0 then update the latest amount in the members table
@@ -126,7 +123,7 @@ exports.create_member_transaction = async (req, res) => {
       .json({ message: "Successfully added the transaction" })
       .send();
   } catch (err) {
-    console.log(err);
+    logger.log(err);
     return res.status(500).json({ message: "Intenral Server Error" }).send();
   }
 };
