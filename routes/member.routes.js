@@ -1,6 +1,7 @@
 const { authJwt } = require("../middleware");
 const news_controller = require("../controllers/news/news.controller");
 const notification_controller = require("../controllers/notification/notification.controller");
+const transaction_controller = require("../controllers/transactions/transaction.controller");
 
 module.exports = function (app) {
   app.use(function (req, res, next) {
@@ -22,5 +23,12 @@ module.exports = function (app) {
   // -----
   app.post("/api/notification/get_notification", authJwt.verifyToken , notification_controller.get_notification);
   app.post("/api/notification/cancel_notification", authJwt.verifyToken, notification_controller.cancel_notification);
+
+
+  // -----
+  // EDUCATION MODULE
+  // -----
+  // TODO: add authentication
+  app.post("/api/education/add_receipts", transaction_controller.add_receipts);
 
 };

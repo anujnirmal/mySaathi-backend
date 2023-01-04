@@ -91,15 +91,24 @@ model ycf_id_counter {
 
 model member_bank_transaction {
   id                  Int     @id @default(autoincrement())
-  amount_requested    BigInt 
+  amount_requested    BigInt? 
   status              TRANSACTION_STATUS @default(PENDING)
   transaction_date    DateTime?
   module              MODULES_ACCESS?
   admin_name          String?   
-  approved_by         dashboard_users @relation(fields: [admin_id], references: [id])
-  admin_id            Int
+  receipts            receipts[]
+  approved_by         dashboard_users? @relation(fields: [admin_id], references: [id])
+  admin_id            Int?
   member              members @relation(fields: [member_id], references: [id])
   member_id           Int
+}
+
+model receipts {
+  id                  Int     @id @default(autoincrement())
+  receipt_link        String 
+  transaction         member_bank_transaction @relation(fields: [transaction_id], references: [id])
+  transaction_id      Int
+  upload_date         DateTime  @default(now())
 }
 
 model clinics {

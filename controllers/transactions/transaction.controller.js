@@ -4,7 +4,7 @@ const logger = require("../../logger/logger");
 
 const prisma = db.prisma; // Creating an instance of the databse
 
-// Get all transaction data
+// Get all transaction data for all users
 exports.get_all_transaction_data = async (req, res) => {
   await prisma.member_bank_transaction
     .findMany({})
@@ -20,14 +20,20 @@ exports.get_all_transaction_data = async (req, res) => {
     });
 };
 
-exports.get_transaction_data = async (req, res) => {
+// Get transaction data of one or more users
+exports.get_transaction_data_by_member_id = async (req, res) => {
   // member_ids format = [1,2,3]
-  const { member_ids } = req.body;
+  const { member_id } = req.body;
+
+  if(member_id === null || member_id === undefined){
+    // 422 - for validation error
+    return res.status(422).json({ message: "Please send a valid member id" }).send();
+  }
 
   await prisma.member_bank_transaction
     .findMany({
       where: {
-        in: member_ids,
+        member_id: member_id,
       },
     })
     .then((bank_transaction) => {
@@ -42,7 +48,7 @@ exports.get_transaction_data = async (req, res) => {
     });
 };
 
-// Create a new news
+// Create a new member transaction
 exports.create_member_transaction = async (req, res) => {
   // Destructuring the results recieved
   // image_url is recieved from aws s3 after uploading
@@ -124,6 +130,125 @@ exports.create_member_transaction = async (req, res) => {
       .send();
   } catch (err) {
     logger.log(err);
+    return res.status(500).json({ message: "Intenral Server Error" }).send();
+  }
+};
+
+
+// Add Receipts
+exports.add_receipts = async (req, res) => {
+
+  const {
+    member_id,
+    module,
+    receipts
+  } = req.body;
+
+  console.log(req.body);
+
+  // Check for response length
+  if (receipts.length === 0) {
+    // 422 - for validation error
+    return res.status(422).json({ message: "Please upload atleast one receipt" }).send();
+  }
+
+  if(member_id.length === 0 || member_id === null || member_id === undefined){
+    // 422 - for validation error
+    return res.status(422).json({ message: "Please send the request with member_id" }).send();
+  }
+
+  let receipts_object = [];
+
+  // Format the inputted
+  receipts.forEach((current_receipt) => {
+    let temp_receipt_object = {
+      receipt_link: current_receipt,
+    }
+
+    receipts_object.push(temp_receipt_object);
+  })
+
+  try {
+    let transaction = await prisma.member_bank_transaction.create({
+      data: {
+        module: module,
+        member: {
+          connect: {
+            id: member_id,
+          }
+        },
+        receipts: {
+          createMany: {
+            data: receipts_object,
+          }
+        }
+      }
+    })
+    return res
+      .status(201)
+      .json({ message: "Successfully added the transaction", data: transaction })
+      .send();
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).json({ message: "Intenral Server Error" }).send();
+  }
+};
+
+// Add Receipts
+exports.get_all = async (req, res) => {
+
+  const {
+    member_id,
+    module,
+    receipts
+  } = req.body;
+
+  console.log(req.body);
+
+  // Check for response length
+  if (receipts.length === 0) {
+    // 422 - for validation error
+    return res.status(422).json({ message: "Please upload atleast one receipt" }).send();
+  }
+
+  if(member_id.length === 0 || member_id === null || member_id === undefined){
+    // 422 - for validation error
+    return res.status(422).json({ message: "Please send the request with member_id" }).send();
+  }
+
+  let receipts_object = [];
+
+  // Format the inputted
+  receipts.forEach((current_receipt) => {
+    let temp_receipt_object = {
+      receipt_link: current_receipt,
+    }
+
+    receipts_object.push(temp_receipt_object);
+  })
+
+  try {
+    let transaction = await prisma.member_bank_transaction.create({
+      data: {
+        module: module,
+        member: {
+          connect: {
+            id: member_id,
+          }
+        },
+        receipts: {
+          createMany: {
+            data: receipts_object,
+          }
+        }
+      }
+    })
+    return res
+      .status(201)
+      .json({ message: "Successfully added the transaction", data: transaction })
+      .send();
+  } catch (err) {
+    logger.error(err);
     return res.status(500).json({ message: "Intenral Server Error" }).send();
   }
 };

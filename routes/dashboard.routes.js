@@ -51,17 +51,14 @@ module.exports = function(app) {
   app.post("/api/notification/get_notification", authJwt.verifyToken , notification_controller.get_notification);
   app.post("/api/notification/cancel_notification", authJwt.verifyToken, notification_controller.cancel_notification);
   app.post("/api/notification/create_notifications", authJwt.verifyToken, notification_controller.create_notification);
-
-  // -----
-  // NOTIFICATION
-  // -----
   app.post("/api/notification/create_notifications", authJwt.verifyToken, notification_controller.create_notification);
 
   // -----
   // TRANSACTIONS
   // -----
+  // TODO: Add the middleware for authentication later  
   app.post("/api/transactions/create_transaction", authJwt.verifyToken, transaction_controller.create_member_transaction);
-  app.post("/api/transactions/get_transactions", authJwt.verifyToken, transaction_controller.get_transaction_data);
+  app.post("/api/transactions/get_transactions", transaction_controller.get_transaction_data_by_member_id);
 
 
 };
