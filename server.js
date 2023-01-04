@@ -5,22 +5,17 @@ require('dotenv').config();
 
 const app = express();
 
-// TODO: setup env
-
-// var corsOptions = {
-//   origin: "http://localhost:8081"
-// };
-
 // Setting globally, so the response containing BigInt datatype
 // can be serialized
 BigInt.prototype.toJSON = function () {
   return this.toString();
 };
 
+// Change the origin in production
 const corsOptions ={
-  origin:'http://localhost:3000', 
+  origin:['http://localhost:3000', 'https://mysaathi-79980.web.app', 'https://mysaathi-79980.firebaseapp.com'], 
   credentials:true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 }
 
 app.use(cors(corsOptions));
