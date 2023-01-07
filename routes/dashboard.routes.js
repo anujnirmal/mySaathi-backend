@@ -59,7 +59,9 @@ module.exports = function(app) {
   // TODO: Add the middleware for authentication later  
   app.post("/api/transactions/create_transaction", authJwt.verifyToken, transaction_controller.create_member_transaction);
   app.post("/api/transactions/get_transactions", transaction_controller.get_transaction_data_by_member_id);
-
+  app.post("/api/transactions/get_all_pending_transactions", transaction_controller.get_all_pending_transaction);
+  app.put("/api/transactions/accept_pending_transaction", transaction_controller.accept_transaction);
+  app.put("/api/transactions/reject_pending_transaction", transaction_controller.reject_transaction);
 
 };
 

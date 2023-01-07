@@ -501,7 +501,11 @@ exports.get_all_members = async (req, res) => {
       include: {
         bank_detail: true,
         children: true,
-        member_bank_transaction: true,
+        member_bank_transaction: {
+          include: {
+            receipts: true
+          }
+        }
       },
     })
     .then((member) => {
