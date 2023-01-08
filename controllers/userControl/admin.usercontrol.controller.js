@@ -138,9 +138,10 @@ exports.create_member = async (req, res) => {
     bankBranchName: bank_branch_name,
     children,
     modules,
+    yearlyQuota: yearly_quota,
   } = req.body;
 
-  // console.log(req.body);
+  console.log(req.body);
 
   const AADHAAR_LENGTH = 12;
   const MOBILE_NUMBER_LENGTH = 10;
@@ -234,6 +235,8 @@ exports.create_member = async (req, res) => {
       pincode: pincode,
       modules: modules,
       trashed: false,
+      yearly_quota: yearly_quota,
+      balance_amount: yearly_quota,
       bank_detail: {
         create: {
           bank_name: bank_name,
@@ -268,6 +271,8 @@ exports.create_member = async (req, res) => {
       pincode: pincode,
       modules: modules,
       trashed: false,
+      yearly_quota: yearly_quota,
+      balance_amount: yearly_quota,
       bank_detail: {
         create: {
           bank_name: bank_name,
@@ -345,6 +350,7 @@ exports.update_member = async (req, res) => {
     bankBranchName: bank_branch_name,
     children,
     modules,
+    yearlyQuota : yearly_quota
   } = req.body;
 
   console.log(req.body);
@@ -423,6 +429,7 @@ exports.update_member = async (req, res) => {
         pincode: pincode,
         modules: modules,
         trashed: false,
+        yearly_quota: yearly_quota,
         bank_detail: {
           update: {
             where: {
