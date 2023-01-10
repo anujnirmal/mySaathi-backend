@@ -40,7 +40,7 @@ module.exports = function(app) {
   // -----
   // NEWS
   // -----
-  app.post("/api/news/get_all_news", authJwt.verifyToken, news_controller.get_all_news);
+  app.post("/api/news/get_all_news", news_controller.get_all_news);
   app.post("/api/news/create_news", authJwt.verifyToken, news_controller.create_news);
   app.put("/api/news/update_news", authJwt.verifyToken, news_controller.update_news);
   app.delete("/api/news/delete_news", authJwt.verifyToken, news_controller.delete_news);

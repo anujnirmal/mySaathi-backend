@@ -38,6 +38,9 @@ exports.get_transaction_data_by_member_id = async (req, res) => {
       where: {
         member_id: member_id,
       },
+      include: {
+        receipts: true
+      }
     })
     .then((bank_transaction) => {
       // console.log(news);
@@ -235,6 +238,7 @@ exports.add_receipts = async (req, res) => {
         },
       },
     });
+
     return res
       .status(201)
       .json({
