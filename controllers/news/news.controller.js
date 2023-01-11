@@ -3,29 +3,6 @@ const {converToUTCToDate} = require("../../helper/helper.functions");
 
 const prisma = db.prisma; // Creating an instance of the databse
 
-// const converToUTCToDate = (news, data) => {
-//   for (let i = 0; i < news.length; i++) {
-//     let createdUTCDate = news[i].created_at;
-//     let updatedOnUTCDate = news[i].updated_at;
-
-//     let createdDate =
-//       createdUTCDate.getDate() +
-//       "/" +
-//       createdUTCDate.getMonth() +
-//       "/" +
-//       createdUTCDate.getFullYear();
-//     let updatedOnDate =
-//       updatedOnUTCDate.getDate() +
-//       "/" +
-//       updatedOnUTCDate.getMonth() +
-//       "/" +
-//       updatedOnUTCDate.getFullYear();
-
-//     data[i].created_at = createdDate;
-//     data[i].updated_at = updatedOnDate;
-//   }
-// };
-
 // Get all news
 // TODO: check if limiting the queries recieved is required
 exports.get_all_news = async (req, res) => {
@@ -49,7 +26,9 @@ exports.create_news = async (req, res) => {
   // Destructuring the results recieved
   // image_url is recieved from aws s3 after uploading
   // it on the frontend
-  const { title, body, image_url } = req.body;
+  const { title, body, image_url, plainText: plain_text } = req.body;
+
+  console.log(req.body);
 
   // Check for response length
   if (title.length == 0) {
@@ -70,6 +49,7 @@ exports.create_news = async (req, res) => {
         title: title,
         body: body,
         image_url: image_url,
+        plain_text_body: plain_text,
       },
     })
     .then((news) => {
@@ -142,8 +122,6 @@ exports.delete_news = async (req, res) => {
   // TODO: delete image from s3 after deleting photos to save space
   const { news_ids } = req.body;
 
-  console.log(req.body);
-
   if(news_ids === null || news_ids === undefined){
     return res.status(404).json({ message: "Please No Ids found" }).send();
   } 
@@ -157,7 +135,6 @@ exports.delete_news = async (req, res) => {
       },
     })
     .then((news) => {
-      console.log(news);
       // news.count == 0 : record not found or none deleted
       if (news.count == 0) {
         return res.status(404).json({ message: "Record not found" }).send();
