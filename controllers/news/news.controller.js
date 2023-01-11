@@ -1,12 +1,11 @@
 const db = require("../../models");
-const {converToUTCToDate} = require("../../helper/helper.functions");
+const { converToUTCToDate } = require("../../helper/helper.functions");
 
 const prisma = db.prisma; // Creating an instance of the databse
 
+
 // Get all news
-// TODO: check if limiting the queries recieved is required
 exports.get_all_news = async (req, res) => {
-  
   await prisma.news
     .findMany({})
     .then((news) => {
@@ -21,14 +20,38 @@ exports.get_all_news = async (req, res) => {
     });
 };
 
-// Create a new news
+// Get all news
+exports.get_news_by_language = async (req, res) => {
+
+  const { language } = req.body;
+
+  if (language === "" || language === "selectedLanguage") {
+    return res.status(422).json({ message: "Please select a language" }).send();
+  }
+  await prisma.news
+    .findMany({
+      where: {
+        language: language
+      }
+    })
+    .then((news) => {
+      // console.log(news);
+      let data = news;
+      converToUTCToDate(news, data);
+      return res.status(200).json({ data: data }).send();
+    })
+    .catch((err) => {
+      console.log(err);
+      return res.status(500).json({ message: "Internal Server Error" }).send();
+    });
+};
+
+// create news
 exports.create_news = async (req, res) => {
   // Destructuring the results recieved
   // image_url is recieved from aws s3 after uploading
   // it on the frontend
-  const { title, body, image_url, plainText: plain_text } = req.body;
-
-  console.log(req.body);
+  const { title, body, image_url, plainText: plain_text, language } = req.body;
 
   // Check for response length
   if (title.length == 0) {
@@ -41,33 +64,36 @@ exports.create_news = async (req, res) => {
     return res.status(422).json({ message: "Body cannot be null" }).send();
   }
 
-  // Note:
-  // image_url can be null as it is option in the db as well
-  await prisma.news
-    .create({
+  if (language === "" || language === "selectedLanguage") {
+    return res.status(422).json({ message: "Please select a language" }).send();
+  }
+
+  try {
+    let result = await prisma.news.create({
       data: {
         title: title,
         body: body,
         image_url: image_url,
         plain_text_body: plain_text,
+        language: language,
       },
-    })
-    .then((news) => {
-      console.log(news);
-      return res
-        .status(201)
-        .json({ message: "Successfully created news", data: [news] })
-        .send();
-    })
-    .catch((err) => {
-      return res.status(500).json({ message: "Intenral Server Error" }).send();
     });
+
+    return res
+      .status(201)
+      .json({ message: "Successfully created news", data: [result] })
+      .send();
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Intenral Server Error" }).send();
+  }
 };
 
 // Update an existing news
 exports.update_news = async (req, res) => {
   // Destructuring recieved response
-  const { news_id, title, body, image_url } = req.body;
+  const { news_id, title, body, image_url, language } = req.body;
 
   console.log(req.body);
   // Check for response length
@@ -90,6 +116,7 @@ exports.update_news = async (req, res) => {
         title: title,
         body: body,
         image_url: image_url,
+        language: language,
         updated_at: new Date(), // Update the date with the time updated
       },
     })
@@ -122,9 +149,9 @@ exports.delete_news = async (req, res) => {
   // TODO: delete image from s3 after deleting photos to save space
   const { news_ids } = req.body;
 
-  if(news_ids === null || news_ids === undefined){
+  if (news_ids === null || news_ids === undefined) {
     return res.status(404).json({ message: "Please No Ids found" }).send();
-  } 
+  }
 
   await prisma.news
     .deleteMany({

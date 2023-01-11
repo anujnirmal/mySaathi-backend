@@ -28,9 +28,11 @@ model news {
   body       String?
   plain_text_body String?
   image_url  String?
+  language   String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
+
 
 model notifications {
   id         Int       @id @default(autoincrement())
