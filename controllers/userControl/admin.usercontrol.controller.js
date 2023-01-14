@@ -57,34 +57,155 @@ exports.create_dashboard_user = async (req, res) => {
 // Update passwords of Admin Dashboard users
 exports.update_dashboard_password = async (req, res) => {
   // Save User to Database
-  const { email, newPassword } = req.body;
+  const { email, oldPassword, newPassword } = req.body;
 
-  await prisma.dashboard_users
-    .update({
+  if (email === "" || email?.length < 4) {
+    return res
+      .status(404)
+      .json({
+        message: "Please enter a email",
+      })
+      .send();
+  }
+
+  if (oldPassword === "" || oldPassword?.length < 8) {
+    return res
+      .status(404)
+      .json({
+        message: "Password length should be greater then 7 characters",
+      })
+      .send();
+  }
+
+  if (newPassword === "" || newPassword?.length < 8) {
+    return res
+      .status(404)
+      .json({
+        message: "Password length should be greater then 7 characters",
+      })
+      .send();
+  }
+
+  try {
+    // Match the old password
+    let result = await prisma.dashboard_users.findUnique({
+      where: { email_id: email },
+    });
+
+    // If no user found then send 404
+    if (!result) {
+      return res
+        .status(404)
+        .send({ message: "Please enter correct credentials" });
+    }
+
+    // Check for the oldPassword entered with the saved password
+    let passwordIsValid = bcrypt.compareSync(oldPassword, result.password);
+
+    // If password is not valid
+    if (!passwordIsValid) {
+      return res
+        .status(404)
+        .json({
+          accessToken: null,
+          message: "Old password does not match",
+        })
+        .send();
+    }
+
+    // If old password matched then update the password
+    let dashboard_user = await prisma.dashboard_users.update({
       where: { email_id: email },
       data: { password: bcrypt.hashSync(newPassword, 8) },
-    })
-    .then((user) => {
-      console.log(user);
-      res
-        .json({ message: "Successfully update password for " + email })
-        .status(200)
-        .send();
-    })
-    .catch((err) => {
-      console.log(err);
-      if (err.code == "P2025") {
-        return res
-          .json({ message: "Not user found with this email " + email })
-          .status(500)
-          .send();
-      }
-
-      return res
-        .json({ message: "Internal Server Error " + email })
-        .status(500)
-        .send();
     });
+    res
+      .json({ message: "Successfully update password for " + email })
+      .status(200)
+      .send();
+  } catch (err) {
+    console.log(err);
+    return res
+      .json({ message: "Internal Server Error " + email })
+      .status(500)
+      .send();
+  }
+};
+
+// Update passwords of Admin Dashboard users
+exports.update_dashboard_user_detail = async (req, res) => {
+  // Save User to Database
+  const { firstName: first_name, lastName: last_name, email, role } = req.body;
+
+  if (first_name === "" || email?.length < 4) {
+    return res
+      .status(404)
+      .json({
+        message: "Please enter first name",
+      })
+      .send();
+  }
+
+  if (last_name === "" || oldPassword?.length < 8) {
+    return res
+      .status(404)
+      .json({
+        message: "Please enter last name",
+      })
+      .send();
+  }
+
+  if (email === "" || newPassword?.length < 8) {
+    return res
+      .status(404)
+      .json({
+        message: "Please enter email",
+      })
+      .send();
+  }
+
+  try {
+    // Match the old password
+    let result = await prisma.dashboard_users.findUnique({
+      where: { email_id: email },
+    });
+
+    // If no user found then send 404
+    if (!result) {
+      return res
+        .status(404)
+        .send({ message: "Please enter correct credentials" });
+    }
+
+    // Check for the oldPassword entered with the saved password
+    let passwordIsValid = bcrypt.compareSync(oldPassword, result.password);
+
+    // If password is not valid
+    if (!passwordIsValid) {
+      return res
+        .status(404)
+        .json({
+          accessToken: null,
+          message: "Old password does not match",
+        })
+        .send();
+    }
+
+    // If old password matched then update the password
+    let dashboard_user = await prisma.dashboard_users.update({
+      where: { email_id: email },
+      data: { password: bcrypt.hashSync(newPassword, 8) },
+    });
+    res
+      .json({ message: "Successfully update password for " + email })
+      .status(200)
+      .send();
+  } catch (err) {
+    console.log(err);
+    return res
+      .json({ message: "Internal Server Error " + email })
+      .status(500)
+      .send();
+  }
 };
 
 // Delete Admin Dashboard users
@@ -350,7 +471,7 @@ exports.update_member = async (req, res) => {
     bankBranchName: bank_branch_name,
     children,
     modules,
-    yearlyQuota : yearly_quota
+    yearlyQuota: yearly_quota,
   } = req.body;
 
   console.log(req.body);
@@ -510,9 +631,9 @@ exports.get_all_members = async (req, res) => {
         children: true,
         member_bank_transaction: {
           include: {
-            receipts: true
-          }
-        }
+            receipts: true,
+          },
+        },
       },
     })
     .then((member) => {
