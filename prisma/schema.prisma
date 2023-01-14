@@ -97,6 +97,7 @@ model member_bank_transaction {
   amount_requested    BigInt? 
   status              TRANSACTION_STATUS @default(PENDING)
   transaction_date    DateTime?
+  requested_date      DateTime?
   module              MODULES_ACCESS?
   admin_name          String?   
   receipts            receipts[]

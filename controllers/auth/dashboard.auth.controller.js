@@ -11,8 +11,6 @@ var bcrypt = require("bcryptjs");
 exports.dashboard_sign_in = (req, res) => {
   const { email, password } = req.body;
 
-  console.log(req.body);
-
   // Find dashboard user using the email passed
   prisma.dashboard_users
     .findUnique({

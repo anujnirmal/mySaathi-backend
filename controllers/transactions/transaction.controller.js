@@ -8,7 +8,7 @@ const prisma = db.prisma; // Creating an instance of the databse
 exports.get_all_transaction_data = async (req, res) => {
   await prisma.member_bank_transaction
     .findMany({})
-    .then((bank_transaction) => {
+    .then((bank_transaction) => { 
       console.log(bank_transaction);
       let data = bank_transaction;
       // convertUTCToDate(news, data);
@@ -54,21 +54,21 @@ exports.get_transaction_data_by_member_id = async (req, res) => {
     });
 };
 
-// Get all transaction data for all users
-exports.get_all_transaction_data = async (req, res) => {
-  await prisma.member_bank_transaction
-    .findMany({})
-    .then((bank_transaction) => {
-      console.log(bank_transaction);
-      let data = bank_transaction;
-      // convertUTCToDate(news, data);
-      return res.status(200).json({ data: data }).send();
-    })
-    .catch((err) => {
-      console.log(err);
-      return res.status(500).json({ message: "Internal Server Error" }).send();
-    });
-};
+// // Get all transaction data for all users
+// exports.get_all_transaction_data = async (req, res) => {
+//   await prisma.member_bank_transaction
+//     .findMany({})
+//     .then((bank_transaction) => {
+//       console.log(bank_transaction);
+//       let data = bank_transaction;
+//       // convertUTCToDate(news, data);
+//       return res.status(200).json({ data: data }).send();
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       return res.status(500).json({ message: "Internal Server Error" }).send();
+//     });
+// };
 
 // Get all pending transactions that needs to be accepted or rejected
 exports.get_all_pending_transaction = async (req, res) => {
@@ -76,6 +76,9 @@ exports.get_all_pending_transaction = async (req, res) => {
     .findMany({
       where: {
         status: "PENDING",
+      },
+      orderBy: {
+        requested_date: 'desc'
       },
       include: {
         member: true,
@@ -225,6 +228,7 @@ exports.add_receipts = async (req, res) => {
   try {
     let transaction = await prisma.member_bank_transaction.create({
       data: {
+        requested_date: new Date(),
         module: module,
         member: {
           connect: {
@@ -237,7 +241,9 @@ exports.add_receipts = async (req, res) => {
           },
         },
       },
-    });
+    }); 
+
+    console.log(transaction);
 
     return res
       .status(201)
