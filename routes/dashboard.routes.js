@@ -55,7 +55,7 @@ module.exports = function(app) {
   // -----
   app.post("/api/notification/get_notification", authJwt.verifyToken , notification_controller.get_notification);
   app.post("/api/notification/cancel_notification", authJwt.verifyToken, notification_controller.cancel_notification);
-  app.post("/api/notification/create_notifications", authJwt.verifyToken, notification_controller.create_notification);
+  app.post("/api/notification/create_notifications", notification_controller.create_notification);
   app.post("/api/notification/create_notifications", authJwt.verifyToken, notification_controller.create_notification);
 
   // -----

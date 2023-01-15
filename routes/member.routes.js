@@ -21,8 +21,9 @@ module.exports = function (app) {
   // -----
   // NOTIFICATION
   // -----
-  app.post("/api/notification/get_notification", authJwt.verifyToken , notification_controller.get_notification);
+  app.post("/api/notification/get_notification", notification_controller.get_notification);
   app.post("/api/notification/cancel_notification", authJwt.verifyToken, notification_controller.cancel_notification);
+  app.post("/api/notification/add_fcm_token", notification_controller.add_fcm_token);
 
 
   // -----

@@ -1,5 +1,6 @@
 const db = require("../../models");
 const { converToUTCToDate } = require("../../helper/helper.functions");
+const { send_push_notification } = require("../notification/push.notification.controller");
 
 const prisma = db.prisma; // Creating an instance of the databse
 
@@ -78,7 +79,7 @@ exports.create_news = async (req, res) => {
         language: language,
       },
     });
-
+    
     return res
       .status(201)
       .json({ message: "Successfully created news", data: [result] })

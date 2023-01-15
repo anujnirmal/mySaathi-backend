@@ -38,6 +38,7 @@ model notifications {
   id         Int       @id @default(autoincrement())
   title      String    @db.VarChar(255)
   body       String
+  image_url  String?
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
   member     members[] //one notification can have many members
@@ -66,6 +67,7 @@ model members {
   modules                 MODULES_ACCESS[]
   bank_detail             bank_details[]
   member_bank_transaction member_bank_transaction[]
+  notification_token      notification_tokens[]
 }
 
 model bank_details {
@@ -129,6 +131,15 @@ model hospitals {
   address   String
   longitute String
   latitute  String
+}
+
+model notification_tokens{
+  id                Int       @id @default(autoincrement())
+  fcm_token         String    @unique
+  member            members   @relation(fields: [member_id], references: [id])
+  member_id         Int
+  created_at        DateTime  @default(now())
+  updated_At        DateTime  @updatedAt
 }
 
 // Change device id to be unique 

@@ -54,22 +54,6 @@ exports.get_transaction_data_by_member_id = async (req, res) => {
     });
 };
 
-// // Get all transaction data for all users
-// exports.get_all_transaction_data = async (req, res) => {
-//   await prisma.member_bank_transaction
-//     .findMany({})
-//     .then((bank_transaction) => {
-//       console.log(bank_transaction);
-//       let data = bank_transaction;
-//       // convertUTCToDate(news, data);
-//       return res.status(200).json({ data: data }).send();
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//       return res.status(500).json({ message: "Internal Server Error" }).send();
-//     });
-// };
-
 // Get all pending transactions that needs to be accepted or rejected
 exports.get_all_pending_transaction = async (req, res) => {
   await prisma.member_bank_transaction
