@@ -57,10 +57,12 @@ model members {
   pancard_number          String                    @unique @db.VarChar(255)
   address                 String
   pincode                 String
+  password                String?
   trashed                 Boolean?
   profile_photo           String?
   yearly_quota            String?
   balance_amount          String?
+  language                LANGUAGE?
   children                children[]
   refresh_token           refresh_tokens[]
   notification            notifications[] // member can have many notification
@@ -169,4 +171,10 @@ enum TRANSACTION_STATUS {
   APPROVED
   REJECTED
   PENDING
+}
+
+enum LANGUAGE {
+  ENGLISH
+  HINDI
+  MARATHI
 }
