@@ -1,6 +1,6 @@
 const db = require("../../models");
 const { converToUTCToDate } = require("../../helper/helper.functions");
-const { send_push_notification } = require("../notification/push.notification.controller");
+const { send_push_notification, get_fcm_tokens } = require("../notification/push.notification.controller");
 
 const prisma = db.prisma; // Creating an instance of the databse
 
@@ -80,6 +80,17 @@ exports.create_news = async (req, res) => {
       },
     });
     
+    // Get the fcm tokens
+    let fcm_tokens = await get_fcm_tokens(true, [], true, language.toUpperCase());
+    let content = {
+      body: title,
+      title: "Check out this new post",
+      image_url: image_url
+    }
+
+    console.log("Fcm" + fcm_tokens);
+    send_push_notification(content, fcm_tokens)
+
     return res
       .status(201)
       .json({ message: "Successfully created news", data: [result] })

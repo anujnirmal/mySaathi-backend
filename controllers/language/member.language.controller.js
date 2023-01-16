@@ -21,9 +21,9 @@ exports.update_member_language = async (req, res) => {
 
   // Validate language
   if (
-    languageToUpdate !== "HINDI" ||
-    languageToUpdate !== "ENGLISH" ||
-    languageToUpdate !== "MARATHI"
+    !(languageToUpdate === "HINDI" ||
+    languageToUpdate === "ENGLISH" ||
+    languageToUpdate === "MARATHI")
   ) {
     return res
       .status(400)

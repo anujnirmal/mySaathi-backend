@@ -1,7 +1,7 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
 const cors = require("cors");
-const {send_push_notification} = require('./controllers/notification/push.notification.controller');
+const {send_push_notification, get_fcm_tokens} = require('./controllers/notification/push.notification.controller');
 require('dotenv').config();
 
 const app = express();
@@ -35,8 +35,6 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to mySaaThi Server" });
 });
-
-
 
 // Basic Terminology
 // Dashboard Users - these are admins, super admins access to the dashboard

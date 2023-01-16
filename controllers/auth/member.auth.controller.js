@@ -12,12 +12,12 @@ exports.member_login_check_mobile_number = async (req, res) => {
   // const { mobile_number, device_id } = req.body;
   const { mobile_number } = req.body;
 
-  console.log(mobile_number);
+  console.log(req.body);
 
-  if (mobile_number.length !== 10) {
+  if (mobile_number === null || mobile_number === undefined || mobile_number.length !== 10) {
     return res
       .status(400)
-      .json({ message: "Please send correct input" })
+      .json({ message: "Please send correct mobile number" })
       .send();
   }
 
@@ -41,7 +41,7 @@ exports.member_login_check_mobile_number = async (req, res) => {
         .json({ user_exists: true, password_exists: false });
     }
 
-    if (member.password === null) {
+    if (member.password !== null) {
       return res.status(200).json({ user_exists: true, password_exists: true });
     }
 
