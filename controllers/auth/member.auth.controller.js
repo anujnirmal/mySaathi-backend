@@ -193,6 +193,7 @@ exports.member_login_or_create_password = async (req, res) => {
     }
 
     let logged_in_member;
+
     if (member.password === null) {
       logged_in_member = await prisma.members.update({
         where: {
@@ -208,6 +209,10 @@ exports.member_login_or_create_password = async (req, res) => {
         password,
         member.password
       );
+
+      // Delete password before sending it to the end user
+      delete member.password;
+      delete member.trashed;
 
       // if password is not valid
       if(!passwordIsValid){
@@ -270,8 +275,7 @@ exports.member_login_or_create_password = async (req, res) => {
                   mobile_number: member.mobile_number,
                   access_token: token,
                   refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
-                  bank_details: member.bank_detail,
-                  children: member.children
+                  member_detail: member,
                 })
                 .status(200)
                 .send();
@@ -306,8 +310,9 @@ exports.member_login_or_create_password = async (req, res) => {
                   mobile_number: member.mobile_number,
                   access_token: token,
                   refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
-                  bank_details: member.bank_detail,
-                  children: member.children
+                  // bank_details: member.bank_detail,
+                  // children: member.children,
+                  member_detail: member,
                 })
                 .status(200)
                 .send();

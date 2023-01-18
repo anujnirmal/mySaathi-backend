@@ -28,20 +28,20 @@ module.exports = function (app) {
   // -----
   // LANGUAGE
   // -----
-  app.post("/api/member/language/update", member_language_controller.update_member_language);
+  app.post("/api/member/language/update", authJwt.verifyToken ,member_language_controller.update_member_language);
 
   // -----
   // NOTIFICATION
   // -----
   app.post("/api/notification/get_notification", authJwt.verifyToken, notification_controller.get_notification);
   app.post("/api/notification/cancel_notification", authJwt.verifyToken, notification_controller.cancel_notification);
-  app.post("/api/notification/add_fcm_token", authJwt.verifyToken, notification_controller.add_fcm_token);
+  app.post("/api/notification/add_fcm_token", authJwt.verifyToken ,notification_controller.add_fcm_token);
 
 
   // -----
   // EDUCATION MODULE
   // -----
   // TODO: add authentication
-  app.post("/api/education/add_receipts", transaction_controller.add_receipts);
+  app.post("/api/education/add_receipts", authJwt.verifyToken ,transaction_controller.add_receipts);
 
 };

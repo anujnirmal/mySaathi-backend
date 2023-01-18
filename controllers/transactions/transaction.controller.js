@@ -1,6 +1,7 @@
 const db = require("../../models");
 const { converToUTCToDate } = require("../../helper/helper.functions");
 const logger = require("../../logger/logger");
+const { get_fcm_tokens, send_push_notification } = require("../notification/push.notification.controller");
 
 const prisma = db.prisma; // Creating an instance of the databse
 
@@ -311,6 +312,17 @@ exports.accept_transaction = async (req, res) => {
       }
     });
 
+
+    // Send notification
+    let fcm_token = await get_fcm_tokens(false, [member_id], false);
+    console.log("FCM token from accept transaction" + fcm_token);
+    let content = {
+      body: "Your request for amount " + amount_requested + " has been approved",
+      title: "Transaction Approved"
+
+    }
+    send_push_notification(content, fcm_token)
+    
     return res
       .status(200)
       .json({
@@ -371,6 +383,17 @@ exports.reject_transaction = async (req, res) => {
         admin_id: admin_id,
       },
     });
+
+     // Send notification
+     let fcm_token = await get_fcm_tokens(false, [member_id], false);
+     console.log("FCM token from accept transaction" + fcm_token);
+     let content = {
+       body: "Your request for amount " + amount_requested + " has been rejected",
+       title: "Transaction Rejected"
+ 
+     }
+     send_push_notification(content, fcm_token)
+
     return res
       .status(200)
       .json({

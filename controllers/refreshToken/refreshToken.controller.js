@@ -59,41 +59,36 @@ exports.dashboard_refreshToken = async (req, res) => {
 
 // Refresh token generation for member/ mobile app users
 exports.member_refreshToken = async (req, res) => {
-  const { mobile_number, refresh_token: request_token } = req.body;
+  const { refresh_token: request_token } = req.body;
 
-  if (request_token == null) {
+  if (request_token === null || request_token === undefined || request_token === "") {
     return res.status(403).json({ message: "Refresh Token is required!" });
   }
 
   // Find using request token
-  await prisma.members
-    .findFirst({
-      include: {
-        refresh_token: {
-          where: {
-            refresh_token: request_token,
-          },
-        },
-      },
-    })
-    .then((member) => {
+  await prisma.refresh_tokens.findFirst({
+    where: {
+      refresh_token: request_token
+    }
+  })
+    .then((refresh_token_object) => {
       // no refresh token found
-      if (member.refresh_token.length == 0) {
+      if (!refresh_token_object) {
         return res
           .status(403)
           .json({ message: "Refresh token is not in database!" });
       }
 
-      if (RefreshToken.verifyExpiration(member.refresh_token[0].expiry_at)) {
+      if (RefreshToken.verifyExpiration(refresh_token_object.expiry_at)) {
         prisma.members
           .update({
             where: {
-              mobile_number: mobile_number,
+              id: refresh_token_object.member_id,
             },
             data: {
               refresh_token: {
                 delete: {
-                  id: member.refresh_token[0].id,
+                  id: refresh_token_object.member_id
                 },
               },
             },
@@ -112,7 +107,7 @@ exports.member_refreshToken = async (req, res) => {
       }
 
       let new_access_token = jwt.sign(
-        { mobile_number: member.mobile_number  },
+        { member_id: refresh_token_object.member_id },
         config.secret,
         {
           expiresIn: config.member_jwt_expiration,
@@ -122,7 +117,7 @@ exports.member_refreshToken = async (req, res) => {
       return res
         .json({
           access_token: new_access_token,
-          refresh_token: member.refresh_token[0].refresh_token,
+          refresh_token: refresh_token_object.refresh_token,
         })
         .status(200)
         .send();

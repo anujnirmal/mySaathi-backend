@@ -21,5 +21,6 @@ exports.createToken = async function (refresh_token_expiry) {
 };
 
 exports.verifyExpiration = (expiry_at) => {
+    console.log(expiry_at);
     return expiry_at.getTime() < new Date().getTime();
 };
