@@ -1,8 +1,8 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
 const cors = require("cors");
-const {send_push_notification, get_fcm_tokens} = require('./controllers/notification/push.notification.controller');
 require('dotenv').config();
+
 
 const app = express();
 
@@ -14,7 +14,7 @@ BigInt.prototype.toJSON = function () {
 
 // Change the origin in production
 const corsOptions ={
-  origin:['http://localhost:3000', 'https://mysaathi-79980.web.app', 'https://mysaathi-79980.firebaseapp.com'], 
+  origin:['http://localhost:3000', 'https://mysaathi-prod.web.app', 'https://mysaathi-prod.firebaseapp.com'], 
   credentials:true,
   optionsSuccessStatus: 200,
 }
@@ -28,6 +28,7 @@ app.use(express.json());
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
 
+// onboard_members_using_google_sheet();
 //middleware for cookies
 app.use(cookieParser());
 

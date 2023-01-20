@@ -25,6 +25,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.17.1",
     "firebase-admin": "^11.4.1",
+    "google-spreadsheet": "^3.3.0",
     "jsonwebtoken": "^8.5.1",
     "mysql2": "^2.1.0",
     "sequelize": "^5.21.3",

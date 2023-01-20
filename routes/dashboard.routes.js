@@ -3,6 +3,7 @@ const controller = require("../controllers/userControl/admin.usercontrol.control
 const news_controller = require("../controllers/news/news.controller");
 const notification_controller = require("../controllers/notification/notification.controller");
 const transaction_controller = require("../controllers/transactions/transaction.controller");
+const member_onboarding_controller = require("../controllers/memberOnboarding/member.onboarding.controller");
 
 module.exports = function(app) {
   app.use(function(req, res, next) {
@@ -24,6 +25,7 @@ module.exports = function(app) {
   app.put("/api/admin/update_dashboard_password", [authJwt.verifyToken, authJwt.isSuperAdmin], controller.update_dashboard_password);
   app.put("/api/admin/update_dashboard_user_detail", [authJwt.verifyToken, authJwt.isSuperAdmin], controller.update_dashboard_user_detail);
   app.delete("/api/admin/delete_dashboard_user", [authJwt.verifyToken, authJwt.isSuperAdmin], controller.delete_dashboard_user);
+  app.post("/api/admin/seed_user_from_google_sheet", member_onboarding_controller.onboard_member_google_sheet);
  
 
   // TODO: Make a route to get all the members
@@ -63,10 +65,11 @@ module.exports = function(app) {
   // -----
   // TODO: Add the middleware for authentication later  
   app.post("/api/transactions/create_transaction", authJwt.verifyToken, transaction_controller.create_member_transaction);
-  app.post("/api/transactions/get_transactions", transaction_controller.get_transaction_data_by_member_id);
+  app.post("/api/transactions/get_transactions", authJwt.verifyToken ,transaction_controller.get_transaction_data_by_member_id);
   app.post("/api/transactions/get_all_pending_transactions", transaction_controller.get_all_pending_transaction);
   app.put("/api/transactions/accept_pending_transaction", transaction_controller.accept_transaction);
   app.put("/api/transactions/reject_pending_transaction", transaction_controller.reject_transaction);
+
 
 };
 

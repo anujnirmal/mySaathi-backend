@@ -11,28 +11,27 @@ datasource db {
 }
 
 model dashboard_users {
-  id            Int             @id @default(autoincrement())
-  first_name    String?          @db.VarChar(255)
-  last_name     String?          @db.VarChar(255)
-  email_id      String          @unique @db.VarChar(255)
-  password      String
-  role          DASHBOARD_ROLES @default(ADMIN)
-  refresh_token String?
-  expiry_at     DateTime?
+  id                      Int                       @id @default(autoincrement())
+  first_name              String?                   @db.VarChar(255)
+  last_name               String?                   @db.VarChar(255)
+  email_id                String                    @unique @db.VarChar(255)
+  password                String
+  role                    DASHBOARD_ROLES           @default(ADMIN)
+  refresh_token           String?
+  expiry_at               DateTime?
   member_bank_transaction member_bank_transaction[]
 }
 
 model news {
-  id         Int      @id @default(autoincrement())
-  title      String   @db.VarChar(255)
-  body       String?
+  id              Int      @id @default(autoincrement())
+  title           String   @db.VarChar(255)
+  body            String?
   plain_text_body String?
-  image_url  String?
-  language   String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  image_url       String?
+  language        String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 }
-
 
 model notifications {
   id         Int       @id @default(autoincrement())
@@ -49,27 +48,36 @@ model notifications {
 // Recheck datatypes
 // Recheck optional fields
 model members {
-  id                      Int                       @id @default(autoincrement())
-  ycf_id                  String                    @unique @db.VarChar(255)
-  full_name               String
-  mobile_number           String                    @unique
-  aadhaar_number          String                    @unique
-  pancard_number          String                    @unique @db.VarChar(255)
-  address                 String
-  pincode                 String
-  password                String?
-  trashed                 Boolean?
-  profile_photo           String?
-  yearly_quota            String?
-  balance_amount          String?
-  language                LANGUAGE?
-  children                children[]
-  refresh_token           refresh_tokens[]
-  notification            notifications[] // member can have many notification
-  modules                 MODULES_ACCESS[]
-  bank_detail             bank_details[]
-  member_bank_transaction member_bank_transaction[]
-  notification_token      notification_tokens[]
+  id                              Int                       @id @default(autoincrement())
+  ycf_id                          String?                   @unique @db.VarChar(255)
+  full_name                       String
+  mobile_number                   String                    @unique
+  alternate_mobile_number         String?
+  aadhaar_number                  String                    @unique
+  pancard_number                  String                    @unique @db.VarChar(255)
+  address                         String
+  date_of_birth                   String?
+  gender                          GENDER?
+  pincode                         String
+  password                        String?
+  trashed                         Boolean?
+  profile_photo                   String?
+  yearly_quota                    String?
+  balance_amount                  String?
+  registered_member_of_film_union Boolean
+  active_saathi_member_till_2022  Boolean
+  monthly_salary_range            String
+  retired_person                  Boolean
+  disabled                        Boolean
+  disability                      String?
+  language                        LANGUAGE?
+  children                        children[]
+  refresh_token                   refresh_tokens[]
+  notification                    notifications[] // member can have many notification
+  modules                         MODULES_ACCESS[]
+  bank_detail                     bank_details[]
+  member_bank_transaction         member_bank_transaction[]
+  notification_token              notification_tokens[]
 }
 
 model bank_details {
@@ -97,26 +105,26 @@ model ycf_id_counter {
 }
 
 model member_bank_transaction {
-  id                  Int     @id @default(autoincrement())
-  amount_requested    BigInt? 
-  status              TRANSACTION_STATUS @default(PENDING)
-  transaction_date    DateTime?
-  requested_date      DateTime?
-  module              MODULES_ACCESS?
-  admin_name          String?   
-  receipts            receipts[]
-  approved_by         dashboard_users? @relation(fields: [admin_id], references: [id])
-  admin_id            Int?
-  member              members @relation(fields: [member_id], references: [id])
-  member_id           Int
+  id               Int                @id @default(autoincrement())
+  amount_requested BigInt?
+  status           TRANSACTION_STATUS @default(PENDING)
+  transaction_date DateTime?
+  requested_date   DateTime?
+  module           MODULES_ACCESS?
+  admin_name       String?
+  receipts         receipts[]
+  approved_by      dashboard_users?   @relation(fields: [admin_id], references: [id])
+  admin_id         Int?
+  member           members            @relation(fields: [member_id], references: [id])
+  member_id        Int
 }
 
 model receipts {
-  id                  Int     @id @default(autoincrement())
-  receipt_link        String 
-  transaction         member_bank_transaction @relation(fields: [transaction_id], references: [id])
-  transaction_id      Int
-  upload_date         DateTime  @default(now())
+  id             Int                     @id @default(autoincrement())
+  receipt_link   String
+  transaction    member_bank_transaction @relation(fields: [transaction_id], references: [id])
+  transaction_id Int
+  upload_date    DateTime                @default(now())
 }
 
 model chemists {
@@ -135,13 +143,13 @@ model hospitals {
   latitute  String
 }
 
-model notification_tokens{
-  id                Int       @id @default(autoincrement())
-  fcm_token         String    @unique
-  member            members   @relation(fields: [member_id], references: [id])
-  member_id         Int
-  created_at        DateTime  @default(now())
-  updated_At        DateTime  @updatedAt
+model notification_tokens {
+  id         Int      @id @default(autoincrement())
+  fcm_token  String   @unique
+  member     members  @relation(fields: [member_id], references: [id])
+  member_id  Int
+  created_at DateTime @default(now())
+  updated_At DateTime @updatedAt
 }
 
 // Change device id to be unique 
@@ -163,7 +171,7 @@ enum DASHBOARD_ROLES {
 
 enum MODULES_ACCESS {
   EDUCATION
-  MEDICAL
+  HEALTH
   HOUSEHOLD
 }
 
@@ -177,4 +185,9 @@ enum LANGUAGE {
   ENGLISH
   HINDI
   MARATHI
+}
+
+enum GENDER {
+  MALE
+  FEMALE
 }

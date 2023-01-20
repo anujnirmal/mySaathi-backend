@@ -61,49 +61,48 @@ exports.dashboard_refreshToken = async (req, res) => {
 exports.member_refreshToken = async (req, res) => {
   const { refresh_token: request_token } = req.body;
 
-  if (request_token === null || request_token === undefined || request_token === "") {
-    return res.status(403).json({ message: "Refresh Token is required!" });
+  console.log(req.body);
+
+  if (
+    request_token === null ||
+    request_token === undefined ||
+    request_token === ""
+  ) {
+    return res
+      .status(403)
+      .json({ message: "Refresh Token is required!" })
+      .send();
   }
 
   // Find using request token
-  await prisma.refresh_tokens.findFirst({
-    where: {
-      refresh_token: request_token
-    }
-  })
-    .then((refresh_token_object) => {
+  await prisma.refresh_tokens
+    .findFirst({
+      where: {
+        refresh_token: request_token,
+      },
+    })
+    .then(async (refresh_token_object) => {
       // no refresh token found
       if (!refresh_token_object) {
         return res
           .status(403)
-          .json({ message: "Refresh token is not in database!" });
+          .json({ message: "Refresh token is not in database!" })
+          .send();
       }
 
       if (RefreshToken.verifyExpiration(refresh_token_object.expiry_at)) {
-        prisma.members
-          .update({
-            where: {
-              id: refresh_token_object.member_id,
-            },
-            data: {
-              refresh_token: {
-                delete: {
-                  id: refresh_token_object.member_id
-                },
-              },
-            },
-          })
-          .then((result) => {
-            console.log(result);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-
-        return res.status(403).json({
-          message:
-            "Refresh token was expired. Please make a new signin request",
+        await prisma.refresh_tokens.delete({
+          where: {
+            refresh_token: request_token,
+          },
         });
+        return res
+          .status(403)
+          .json({
+            message:
+              "Refresh token was expired. Please make a new signin request",
+          })
+          .send();
       }
 
       let new_access_token = jwt.sign(
@@ -115,11 +114,11 @@ exports.member_refreshToken = async (req, res) => {
       );
 
       return res
+        .status(200)
         .json({
           access_token: new_access_token,
           refresh_token: refresh_token_object.refresh_token,
         })
-        .status(200)
         .send();
     });
 };

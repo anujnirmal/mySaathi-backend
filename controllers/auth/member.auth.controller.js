@@ -14,7 +14,11 @@ exports.member_login_check_mobile_number = async (req, res) => {
 
   console.log(req.body);
 
-  if (mobile_number === null || mobile_number === undefined || mobile_number.length !== 10) {
+  if (
+    mobile_number === null ||
+    mobile_number === undefined ||
+    mobile_number.length !== 10
+  ) {
     return res
       .status(400)
       .json({ message: "Please send correct mobile number" })
@@ -149,9 +153,15 @@ exports.member_login_check_mobile_number = async (req, res) => {
 // and login
 exports.member_login_or_create_password = async (req, res) => {
   // const { mobile_number, device_id } = req.body;
-  const { mobile_number, password, device_id } = req.body;
+  const { mobile_number, password, device_id, language } = req.body;
 
-  if (mobile_number === null || mobile_number === undefined || mobile_number.length !== 10) {
+  console.log(req.body);
+
+  if (
+    mobile_number === null ||
+    mobile_number === undefined ||
+    mobile_number.length !== 10
+  ) {
     return res
       .status(400)
       .json({ message: "Please send correct input" })
@@ -165,10 +175,21 @@ exports.member_login_or_create_password = async (req, res) => {
       .send();
   }
 
-  if (device_id === null || device_id === undefined || device_id === "" ) {
+  if (device_id === null || device_id === undefined || device_id === "") {
     return res
       .status(400)
       .json({ message: "Please provide a device id" })
+      .send();
+  }
+
+  if (
+    language === null ||
+    language === undefined ||
+    !(language === "ENGLISH" || language === "MARATHI" || language === "HINDI")
+  ) {
+    return res
+      .status(400)
+      .json({ message: "Please provide a valid language" })
       .send();
   }
 
@@ -176,20 +197,18 @@ exports.member_login_or_create_password = async (req, res) => {
     // If success then
     //  TODO: check with ketan about the member
     let member = await prisma.members.findUnique({
-      where: { 
-        mobile_number: mobile_number
+      where: {
+        mobile_number: mobile_number,
       },
       include: {
         children: true,
         bank_detail: true,
-      }
+      },
     });
 
     // If user does not exist
     if (!member) {
-      return res
-        .status(400)
-        .json({ message: "User not found" });
+      return res.status(400).json({ message: "User not found" });
     }
 
     let logged_in_member;
@@ -197,133 +216,114 @@ exports.member_login_or_create_password = async (req, res) => {
     if (member.password === null) {
       logged_in_member = await prisma.members.update({
         where: {
-          mobile_number: mobile_number
+          mobile_number: mobile_number,
         },
         data: {
-          password: bcrypt.hashSync(password, 8)
-        }
-      })
+          password: bcrypt.hashSync(password, 8),
+        },
+      });
     } else {
       // Check for the password
-      let passwordIsValid = bcrypt.compareSync(
-        password,
-        member.password
-      );
+      let passwordIsValid = bcrypt.compareSync(password, member.password);
 
       // Delete password before sending it to the end user
       delete member.password;
       delete member.trashed;
 
       // if password is not valid
-      if(!passwordIsValid){
-        return res.status(404)
-        .json({
-          message: "Please enter correct mobile number and password",
-        })
-        .send();
+      if (!passwordIsValid) {
+        return res
+          .status(404)
+          .json({
+            message: "Please enter correct mobile number and password",
+          })
+          .send();
       }
-
     }
 
-    let invalidate_before_date = new Date();
-
-    // Create json web token
-    let token = jwt.sign(
-      {
-        mobile_number: member.mobile_number,
-        device_id: device_id,
-        invalidate_before: invalidate_before_date.getTime(),
-      },
-      config.secret,
-      {
-        expiresIn: config.member_jwt_expiration,
-      }
-    );
-
-    // Create a new refresh token
-    let refreshToken = await RefreshToken.createToken(
-      config.member_jwt_refreshexpiration // pass in the refresh token expiry for member
-    );
-    
-    // Find the refresh token
-    // IF refresh token is found then just update,
-    // If not found then create a new one
-    await prisma.refresh_tokens
-      .findFirst({
+    // Update Language
+    await prisma.members
+      .update({
         where: {
-          device_id: device_id,
+          mobile_number: mobile_number,
+        },
+        data: {
+          language: language,
         },
       })
-      .then(async (result) => {
-        //if device found
-        if (result) {
-          await prisma.refresh_tokens
-            .update({
-              where: {
-                device_id: device_id,
-              },
-              data: {
-                refresh_token: refreshToken.token,
-                expiry_at: refreshToken.expiry_at,
-                invalidate_before: invalidate_before_date,
-              },
-            })
-            .then((result) => {
-              return res
-                .json({
+      .then(async (language_updated) => {
+        console.log(language_updated);
+
+        let invalidate_before_date = new Date();
+
+        // Create json web token
+        let token = jwt.sign(
+          {
+            mobile_number: member.mobile_number,
+            device_id: device_id,
+            invalidate_before: invalidate_before_date.getTime(),
+          },
+          config.secret,
+          {
+            expiresIn: config.member_jwt_expiration,
+          }
+        );
+
+        // Create a new refresh token
+        let refreshToken = await RefreshToken.createToken(
+          config.member_jwt_refreshexpiration // pass in the refresh token expiry for member
+        );
+
+        // Find the refresh token
+        // IF refresh token is found then just update,
+        // If not found then create a new one
+        await prisma.refresh_tokens
+          .upsert({
+            where: {
+              device_id: device_id,
+            },
+            update: {
+              refresh_token: refreshToken.token,
+              expiry_at: refreshToken.expiry_at,
+              invalidate_before: invalidate_before_date,
+            },
+            create: {
+              refresh_token: refreshToken.token,
+              expiry_at: refreshToken.expiry_at,
+              device_id: device_id,
+              invalidate_before: invalidate_before_date,
+              member: {
+                connect: {
                   id: member.id,
-                  mobile_number: member.mobile_number,
-                  access_token: token,
-                  refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
-                  member_detail: member,
-                })
-                .status(200)
-                .send();
-            })
-            .catch((err) => {
-              console.log(err);
-              return res
-                .json({ message: "Internal server error" })
-                .status(500)
-                .send();
-            });
-        } else {
-          // if device id is not found
-          await prisma.refresh_tokens
-            .create({
-              data: {
-                refresh_token: refreshToken.token,
-                expiry_at: refreshToken.expiry_at,
-                device_id: device_id,
-                invalidate_before: invalidate_before_date,
-                member: {
-                  connect: {
-                    id: member.id,
-                  },
                 },
               },
-            })
-            .then((result) => {
-              return res
-                .json({
-                  id: member.id,
-                  mobile_number: member.mobile_number,
-                  access_token: token,
-                  refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
-                  // bank_details: member.bank_detail,
-                  // children: member.children,
-                  member_detail: member,
-                })
-                .status(200)
-                .send();
-            })
-            .catch((err) => {
-              return res
-                .json({ message: "Internal server error" })
-                .status(500)
-                .send();
-            });
-        }
+            },
+          })
+          .then((result) => {
+            return res
+              .json({
+                id: member.id,
+                mobile_number: member.mobile_number,
+                access_token: token,
+                refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
+                member_detail: member,
+              })
+              .status(200)
+              .send();
+          })
+          .catch((err) => {
+            return res
+              .status(500)
+              .json({ message: "Internal Server Error" })
+              .send();
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+        return res
+          .status(500)
+          .json({ message: "Internal Server Error" })
+          .send();
       });
 
     // Save the refresh token in the db
@@ -332,135 +332,6 @@ exports.member_login_or_create_password = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" }).send();
   }
 };
-
-// exports.member_login_check_mobile_number = async (req, res) => {
-//   // const { mobile_number, device_id } = req.body;
-//   const { mobile_number, password} = req.body;
-
-//   if(mobile_number.length !== 10){
-//     return res.status(400).json({message: "Please send correct input"}).send();
-//   }
-
-//   if(password === ""){
-//     return res.status(400).json({message: "Please enter a password"}).send();
-//   }
-
-//   try {
-
-//    // If success then
-//     await prisma.members
-//       .findUnique({
-//         where: { mobile_number: mobile_number },
-//       })
-//       .then(async (member) => {
-
-//         if (!member) {
-//           return res.status(404).send({ message: "Phone number not found" });
-//         }
-
-//         let invalidate_before_date = new Date();
-
-//         let token = jwt.sign(
-//           {
-//             mobile_number: member.mobile_number,
-//             device_id: device_id,
-//             invalidate_before: invalidate_before_date.getTime(),
-//           },
-//           config.secret,
-//           {
-//             expiresIn: config.member_jwt_expiration,
-//           }
-//         );
-
-//         let refreshToken = await RefreshToken.createToken(
-//           config.member_jwt_refreshexpiration // pass in the refresh token expiry for member
-//         );
-
-//         await prisma.refresh_tokens
-//           .findFirst({
-//             where: {
-//               device_id: device_id,
-//             },
-//           })
-//           .then(async (result) => {
-//             //if device found
-//             if (result) {
-//               await prisma.refresh_tokens
-//                 .update({
-//                   where: {
-//                     device_id: device_id,
-//                   },
-//                   data: {
-//                     refresh_token: refreshToken.token,
-//                     expiry_at: refreshToken.expiry_at,
-//                     invalidate_before: invalidate_before_date,
-//                   },
-//                 })
-//                 .then((result) => {
-//                   return res
-//                     .json({
-//                       id: member.id,
-//                       mobile_number: member.mobile_number,
-//                       access_token: token,
-//                       refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
-//                     })
-//                     .status(200)
-//                     .send();
-//                 })
-//                 .catch((err) => {
-//                   console.log(err);
-//                   return res
-//                     .json({ message: "Internal server error" })
-//                     .status(500)
-//                     .send();
-//                 });
-//             } else {
-//               // if device id is not found
-//               await prisma.refresh_tokens
-//                 .create({
-//                   data: {
-//                     refresh_token: refreshToken.token,
-//                     expiry_at: refreshToken.expiry_at,
-//                     device_id: device_id,
-//                     invalidate_before: invalidate_before_date,
-//                     member: {
-//                       connect: {
-//                         id: member.id,
-//                       },
-//                     },
-//                   },
-//                 })
-//                 .then((result) => {
-//                   return res
-//                     .json({
-//                       id: member.id,
-//                       mobile_number: member.mobile_number,
-//                       access_token: token,
-//                       refresh_token: result.refresh_token, //pass the refresh token returnd after updating db
-//                     })
-//                     .status(200)
-//                     .send();
-//                 })
-//                 .catch((err) => {
-//                   return res
-//                     .json({ message: "Internal server error" })
-//                     .status(500)
-//                     .send();
-//                 });
-//             }
-//           });
-
-//         // Save the refresh token in the db
-//       })
-//       .catch((err) => {
-//         console.log(err);
-//         return res.status(500).send({ message: "Internal server error" });
-//       });
-//   } catch (err) {
-//     console.log(err);
-//     return res.status(500).json({ message: "Internal Server Error" }).send();
-//   }
-// };
 
 // Members can request a new otp during login process
 exports.member_get_otp = async (req, res) => {

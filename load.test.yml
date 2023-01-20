@@ -1,0 +1,25 @@
+config:
+  target: "https://anujnirmal.com"
+  phases:
+    - duration: 60
+      arrivalRate: 20
+      name: "Warming up"
+    - duration: 240
+      arrivalRate: 20
+      rampTo: 100
+      name: "Ramping up"
+    - duration: 500
+      arrivalRate: 100
+      name: "Sustained load"
+ 
+scenarios:
+  - name: "Sign in flow and get news"
+    flow:
+      - get:
+          url: "/"
+      - think: 1
+      - post:
+          url: "/api/auth/admin/sign_in"
+          json:
+            email: "anuj@gmail.com"
+            password: "Robotics2685!"

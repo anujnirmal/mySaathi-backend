@@ -191,7 +191,7 @@ exports.add_receipts = async (req, res) => {
       .send();
   }
 
-  if (member_id.length === 0 || member_id === null || member_id === undefined) {
+  if (member_id === null || member_id === undefined || member_id.length === 0 )  {
     // 422 - for validation error
     return res
       .status(422)
