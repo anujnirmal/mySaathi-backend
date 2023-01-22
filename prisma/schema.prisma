@@ -57,7 +57,7 @@ model members {
   pancard_number          String
   address                 String
   date_of_birth           String?
-  gender                  GENDER?
+  gender                  String?
   pincode                 String
   password                String?
   trashed                 Boolean?                  @default(false)
@@ -202,9 +202,4 @@ enum LANGUAGE {
   ENGLISH
   HINDI
   MARATHI
-}
-
-enum GENDER {
-  MALE
-  FEMALE
 }

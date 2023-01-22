@@ -216,6 +216,7 @@ exports.create_member = async (req, res) => {
     memberProfile: profile_photo,
     address,
     pincode,
+    gender,
     bankName: bank_name,
     bankAccountNumber: bank_account_number,
     ifscCode: ifsc_code,
@@ -223,6 +224,14 @@ exports.create_member = async (req, res) => {
     children,
     modules,
     yearlyQuota: yearly_quota,
+    alternateMobileNumber: alternate_mobile_number,
+    dob: date_of_birth,
+    registeredFilmUnionMember: registered_member_of_film_union,
+    activeSaathiMemberBefore2022: active_saathi_member_till_2022,
+    disabled,
+    mentionDisability: disability,
+    salary: monthly_salary_range,
+    retired: retired_person,
   } = req.body;
 
   console.log(req.body);
@@ -287,29 +296,29 @@ exports.create_member = async (req, res) => {
   }
 
   // console.log("new children" + JSON.stringify(childrenNew));
-  let last_ycf_id;
-  // get the last ycf id
-  await prisma.ycf_id_counter
-    .findFirst({
-      where: {
-        id: 1,
-      },
-    })
-    .then((ycf) => {
-      last_ycf_id = ycf.last_ycf_id;
-    })
-    .catch((err) => {
-      logger.error(err);
-      return res.status(500).json({ message: "Internal Server Error" }).send();
-    });
+  // let last_ycf_id;
+  // // get the last ycf id
+  // await prisma.ycf_id_counter
+  //   .findFirst({
+  //     where: {
+  //       id: 1,
+  //     },
+  //   })
+  //   .then((ycf) => {
+  //     last_ycf_id = ycf.last_ycf_id;
+  //   })
+  //   .catch((err) => {
+  //     logger.error(err);
+  //     return res.status(500).json({ message: "Internal Server Error" }).send();
+  //   });
 
-  let new_ycf_id = incrementString(last_ycf_id);
+  // let new_ycf_id = incrementString(last_ycf_id);
 
   let memberData = {};
 
   if (children?.count === 0 || children === undefined) {
     memberData = {
-      ycf_id: new_ycf_id,
+      // ycf_id: new_ycf_id,
       full_name: full_name,
       mobile_number: mobile_number.toString(),
       aadhaar_number: aadhaar_number.toString(),
@@ -318,6 +327,9 @@ exports.create_member = async (req, res) => {
       address: address,
       pincode: pincode,
       modules: modules,
+      date_of_birth: date_of_birth.toString(),
+      gender: gender,
+      alternate_mobile_number: alternate_mobile_number.toString(),
       trashed: false,
       yearly_quota: yearly_quota,
       balance_amount: yearly_quota,
@@ -327,6 +339,16 @@ exports.create_member = async (req, res) => {
           bank_account_number: bank_account_number.toString(),
           ifsc_code: ifsc_code,
           bank_branch_name: bank_branch_name,
+        },
+      },
+      member_other_detail: {
+        create: {
+          registered_member_of_film_union: registered_member_of_film_union,
+          active_saathi_member_till_2022: active_saathi_member_till_2022,
+          monthly_salary_range: monthly_salary_range,
+          retired_person: retired_person,
+          disabled: disabled,
+          disability: disability,
         },
       },
     };
@@ -345,7 +367,7 @@ exports.create_member = async (req, res) => {
     }
 
     memberData = {
-      ycf_id: new_ycf_id,
+      // ycf_id: new_ycf_id,
       full_name: full_name,
       mobile_number: mobile_number.toString(),
       aadhaar_number: aadhaar_number.toString(),
@@ -355,6 +377,9 @@ exports.create_member = async (req, res) => {
       pincode: pincode,
       modules: modules,
       trashed: false,
+      date_of_birth: date_of_birth.toString(),
+      gender: gender,
+      alternate_mobile_number: alternate_mobile_number.toString(),
       yearly_quota: yearly_quota,
       balance_amount: yearly_quota,
       bank_detail: {
@@ -368,6 +393,16 @@ exports.create_member = async (req, res) => {
       children: {
         create: childrenNew,
       },
+      member_other_detail: {
+        create: {
+          registered_member_of_film_union: registered_member_of_film_union,
+          active_saathi_member_till_2022: active_saathi_member_till_2022,
+          monthly_salary_range: monthly_salary_range,
+          retired_person: retired_person,
+          disabled: disabled,
+          disability: disability,
+        },
+      },
     };
   }
 
@@ -376,32 +411,37 @@ exports.create_member = async (req, res) => {
       data: memberData,
     })
     .then(async (member) => {
+      res
+        .status(201)
+        .json({ message: "Successfully created member", data: member })
+        // .status(201)
+        .send();
       // Update the number in the ycf counter
-      await prisma.ycf_id_counter
-        .update({
-          where: {
-            id: 1,
-          },
-          data: {
-            last_ycf_id: new_ycf_id,
-          },
-        })
-        .then((result) => {
-          return (
-            res
-              .status(201)
-              .json({ message: "Successfully created member", data: member })
-              // .status(201)
-              .send()
-          );
-        })
-        .catch((err) => {
-          logger.error(err);
-          return res
-            .status(500)
-            .json({ message: " Internal Server Error" })
-            .send();
-        });
+      // await prisma.ycf_id_counter
+      //   .update({
+      //     where: {
+      //       id: 1,
+      //     },
+      //     data: {
+      //       last_ycf_id: new_ycf_id,
+      //     },
+      //   })
+      //   .then((result) => {
+      //     return (
+      //       res
+      //         .status(201)
+      //         .json({ message: "Successfully created member", data: member })
+      //         // .status(201)
+      //         .send()
+      //     );
+      //   })
+      //   .catch((err) => {
+      //     logger.error(err);
+      //     return res
+      //       .status(500)
+      //       .json({ message: " Internal Server Error" })
+      //       .send();
+      //   });
     })
     .catch((err) => {
       logger.error(err);
@@ -435,9 +475,16 @@ exports.update_member = async (req, res) => {
     children,
     modules,
     yearlyQuota: yearly_quota,
+    alternateMobileNumber: alternate_mobile_number,
+    dob: date_of_birth,
+    registeredFilmUnionMember: registered_member_of_film_union,
+    activeSaathiMemberBefore2022: active_saathi_member_till_2022,
+    disabled,
+    mentionDisability: disability,
+    salary: monthly_salary_range,
+    retired: retired_person,
+    gender,
   } = req.body;
-
-  console.log(req.body);
 
   const AADHAAR_LENGTH = 12;
   const MOBILE_NUMBER_LENGTH = 10;
@@ -513,6 +560,9 @@ exports.update_member = async (req, res) => {
         pincode: pincode,
         modules: modules,
         trashed: false,
+        date_of_birth: date_of_birth.toString(),
+        gender: gender,
+        alternate_mobile_number: alternate_mobile_number.toString(),
         yearly_quota: yearly_quota,
         bank_detail: {
           update: {
@@ -527,47 +577,69 @@ exports.update_member = async (req, res) => {
             },
           },
         },
+        member_other_detail: {
+          create: {
+            registered_member_of_film_union: registered_member_of_film_union,
+            active_saathi_member_till_2022: active_saathi_member_till_2022,
+            monthly_salary_range: monthly_salary_range,
+            retired_person: retired_person,
+            disabled: disabled,
+            disability: disability,
+          },
+        },
       },
     })
     .then(async (member) => {
+      console.log("here");
       // Upadte or create New Children
-      let childrenUpdateResul;
-      try {
-        for (let i = 0; i < children.length; i++) {
-          childrenUpdateResul = await prisma.children.upsert({
-            where: {
-              id: children[i].id,
-            },
-            update: {
-              child_name: children[i].child_name,
-              school_college_name: children[i].school_college_name,
-              standard_grade: children[i].standard_grade,
-            },
-            create: {
-              child_name: children[i].child_name,
-              school_college_name: children[i].school_college_name,
-              standard_grade: children[i].standard_grade,
-              member: {
-                connect: { id: member_id },
+      if (req.body.hasOwnProperty(children)) {
+        console.log("inside here");
+        let childrenUpdateResul;
+        try {
+          for (let i = 0; i < children?.length; i++) {
+            childrenUpdateResul = await prisma.children.upsert({
+              where: {
+                id: children[i].id,
               },
-            },
-          });
-        }
+              update: {
+                child_name: children[i].child_name,
+                school_college_name: children[i].school_college_name,
+                standard_grade: children[i].standard_grade,
+              },
+              create: {
+                child_name: children[i].child_name,
+                school_college_name: children[i].school_college_name,
+                standard_grade: children[i].standard_grade,
+                member: {
+                  connect: { id: member_id },
+                },
+              },
+            });
+          }
 
-        return (
-          res
-            .status(201)
-            .json({ message: "Successfully created member", data: member })
-            // .status(201)
-            .send()
-        );
-      } catch (err) {
-        logger.error(err);
-        return res
-          .status(500)
-          .json({ message: "Internal Server Error" })
-          .send();
+          return (
+            res
+              .status(201)
+              .json({ message: "Successfully created member", data: member })
+              // .status(201)
+              .send()
+          );
+        } catch (err) {
+          logger.error(err);
+          return res
+            .status(500)
+            .json({ message: "Internal Server Error" })
+            .send();
+        }
       }
+
+      return (
+        res
+          .status(201)
+          .json({ message: "Successfully created member", data: member })
+          // .status(201)
+          .send()
+      );
     })
     .catch((err) => {
       logger.error(err);
@@ -597,6 +669,7 @@ exports.get_all_members = async (req, res) => {
             receipts: true,
           },
         },
+        member_other_detail: true,
       },
     })
     .then((member) => {

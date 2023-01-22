@@ -51,7 +51,7 @@ exports.dashboard_sign_in = (req, res) => {
           expiresIn: config.admin_jwt_expiration, // admin expiry value from auth.config.js
         }
       );
-
+      
       // Create a refresh token to be used when access token/jwt is expired
       let refreshToken = await RefreshToken.createToken(
         config.admin_jwt_refreshexpiration //value is stored in auth.config.js in config folder

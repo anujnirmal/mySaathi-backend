@@ -149,15 +149,14 @@ exports.get_notification = async (req, res) => {
         id: member_id,
       },
       select: {
-        id: true,
-        ycf_id: true,
         notification: true,
       },
     })
     .then(async (result) => {
+      console.log(result);
       return res
         .json({
-          member_notification: result,
+          notificaion: result[0].notification
         })
         .status(201)
         .send();
