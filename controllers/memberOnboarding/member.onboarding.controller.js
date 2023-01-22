@@ -26,8 +26,14 @@ const BENEFIT_SELECTED = 19;
 
 exports.onboard_member_google_sheet = async (req, res) => {
 
+  let admin_name;
+  let admin_id;
+
   if(req.body !== undefined){
-    const { admin_name, admin_id } = req.body;
+    console.log("inside");
+    console.log(req.body);
+    admin_name = req.body.admin_name;
+    admin_id = req.body.admin_id;
   }
     
   // Sheet name as it is on the google sheet

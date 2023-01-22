@@ -17,6 +17,7 @@
   "author": "Anuj Nirmal",
   "license": "ISC",
   "dependencies": {
+    "@plainheart/google-translate-api": "^1.2.0",
     "@prisma/client": "^4.7.1",
     "axios": "^1.2.1",
     "bcryptjs": "^2.4.3",

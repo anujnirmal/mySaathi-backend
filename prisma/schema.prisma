@@ -34,13 +34,17 @@ model news {
 }
 
 model notifications {
-  id         Int       @id @default(autoincrement())
-  title      String    @db.VarChar(255)
-  body       String
-  image_url  String?
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
-  member     members[] //one notification can have many members
+  id            Int       @id @default(autoincrement())
+  hindi_title   String    @db.VarChar(255)
+  english_title String    @db.VarChar(255)
+  marathi_title String    @db.VarChar(255)
+  hindi_body    String
+  english_body  String
+  marathi_body  String
+  image_url     String?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  member        members[] //one notification can have many members
 }
 
 // TODO: 
@@ -151,12 +155,12 @@ model hospitals {
 }
 
 model seeding_data {
-  id         Int             @id @default(autoincrement())
-  date       DateTime
-  admin_name String
-  percentage  String?
-  status     String?
-  error_logs String?
+  id                   Int      @id @default(autoincrement())
+  date                 DateTime
+  admin_name           String
+  percentage           String?
+  status               String?
+  error_logs           String?
   dublicate_error_logs String?
 }
 

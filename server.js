@@ -1,10 +1,9 @@
 const express = require("express");
-const cookieParser = require('cookie-parser');
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const cron = require('node-cron');
+const cron = require("node-cron");
 const member_onboarding_controller = require("./controllers/memberOnboarding/member.onboarding.controller");
-require('dotenv').config();
-
+require("dotenv").config();
 
 const app = express();
 
@@ -15,14 +14,18 @@ BigInt.prototype.toJSON = function () {
 };
 
 // Change the origin in production
-const corsOptions ={
-  origin:['http://localhost:3000', 'https://mysaathi-prod.web.app', 'https://mysaathi-prod.firebaseapp.com'], 
-  credentials:true,
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "https://mysaathi-prod.web.app",
+    "https://mysaathi-prod.firebaseapp.com",
+  ],
+  credentials: true,
   optionsSuccessStatus: 200,
-}
+};
 
 app.use(cors(corsOptions));
-app.options('*', cors())
+app.options("*", cors());
 
 // parse requests of content-type - application/json
 app.use(express.json());
@@ -39,9 +42,10 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to mySaaThi Server" });
 });
 
+
 // Setting up cron job to onboard members
-cron.schedule('27 22 * * Sat', () => {
-  member_onboarding_controller.onboard_member_google_sheet("", "", true);  
+cron.schedule("27 22 * * Sat", () => {
+  member_onboarding_controller.onboard_member_google_sheet("", "", true);
 });
 
 // TODO: write another cron job to reset member balance one 1st Jan
@@ -53,9 +57,9 @@ cron.schedule('27 22 * * Sat', () => {
 // -----
 // ROUTES
 // -----
-require('./routes/auth.routes')(app); // Authentication for both dashboad users and nornam app users
-require('./routes/member.routes')(app); // All routes for mobile app / normal users 
-require('./routes/dashboard.routes')(app)  // All routes for dashboard users
+require("./routes/auth.routes")(app); // Authentication for both dashboad users and nornam app users
+require("./routes/member.routes")(app); // All routes for mobile app / normal users
+require("./routes/dashboard.routes")(app); // All routes for dashboard users
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;

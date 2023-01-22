@@ -139,7 +139,7 @@ exports.send_push_notification = (content, allTokens) => {
       .messaging()
       .sendMulticast(message)
       .then((response) => {
-        console.log("Successfully sent message:", response);
+        console.log("Successfully sent message:", JSON.stringify(response));
       })
       .catch((error) => {
         console.log("Error sending message:", error);
