@@ -25,6 +25,11 @@ const DISABILITY = 18;
 const BENEFIT_SELECTED = 19;
 
 exports.onboard_member_google_sheet = async (req, res) => {
+
+  if(req.body !== undefined){
+    const { admin_name, admin_id } = req.body;
+  }
+    
   // Sheet name as it is on the google sheet
   const SHEET_TITLE = "Eligible Saathi members";
 
@@ -54,11 +59,42 @@ exports.onboard_member_google_sheet = async (req, res) => {
   let member_object = create_seeding_member_object(rows);
 
   // Capture all the dublicate entries
-  let dublicate_entries = [];
+  let dublicate_entries = "";
   // rows that has been processed
   let row_completed_processing = [];
   // Capture the error
-  let errLog = [];
+  let errLog = "";
+
+  // Before starting seeding add the data in seeding_data tables
+  let seeding_data_entry_object = {};
+  if(req.body === undefined) {
+    seeding_data_entry_object = {
+      admin_name: "server",
+      date: new Date(),
+      status: "seeding",
+    }
+  } else {
+    seeding_data_entry_object = {
+      admin_name: admin_name,
+      date: new Date(),
+      status: "seeding",
+    }
+  }
+
+  // This olds the current seeding id and other data
+  let seeding_data_pointer;
+  
+  await prisma.seeding_data.create({
+    data: seeding_data_entry_object
+  }).then((result) => {
+    console.log("result " + result);
+    seeding_data_pointer = result;
+  })
+  .catch((err) => {
+    if(req.body !== undefined) return res.status(500).json({message: "Internal Server Error"}).send();
+    console.log(err);
+  })
+
 
   const seed_data = new Promise((resolve, reject) => {
     // If there is not member object then imediatle resolve it
@@ -85,9 +121,9 @@ exports.onboard_member_google_sheet = async (req, res) => {
             status: "error",
           };
           row_completed_processing.push(error_object);
-          // errLog.push(err);
+          errLog = "newError " + errLog + " " + err + "\n" 
           if (err.code === "P2002") {
-            dublicate_entries.push(member);
+            dublicate_entries = "newDublicateEntry " +  dublicate_entries + " " + member + "\n";
           }
         });
 
@@ -95,7 +131,23 @@ exports.onboard_member_google_sheet = async (req, res) => {
     });
   });
 
-  seed_data.then(() => {
+  seed_data.then(async () => {
+
+    // Once the data has been inserted
+    await prisma.seeding_data.update({
+      where: {
+        id: seeding_data_pointer.id,
+      },
+      data: {
+        percentage: "0",
+        error_logs: errLog,
+        dublicate_error_logs: dublicate_entries,
+      }
+    }).catch((err) => {
+      if(req.body !== undefined) return res.status(500).json({message: "Internal Server Error"}).send();
+      console.log(err);
+    })
+
     // Send the response
     function sleep(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms));
@@ -129,7 +181,6 @@ exports.onboard_member_google_sheet = async (req, res) => {
 
           let loop_times;
 
-          //
           if (row_completed_processing.length <= 50) {
             loop_times = row_completed_processing.length;
           } else {
@@ -162,12 +213,33 @@ exports.onboard_member_google_sheet = async (req, res) => {
 
           //TODO: Update the percentage in db
           let percentage_completed =
-            ((i + 50) / row_completed_processing.length) * 100;
+            ((loop_times) / row_completed_processing.length) * 100;
           console.log(percentage_completed);
+
+          let seeding_data_to_update;
+
+          if(percentage_completed === 100){
+             seeding_data_to_update = {
+              percentage: Math.floor(percentage_completed).toString(),
+              status: "done"
+            }
+          }else {
+            seeding_data_to_update = {
+              percentage: Math.floor(percentage_completed).toString(),
+            }
+          }
+
+          // Update the seeding_data to be displayed on dashboard
+          await prisma.seeding_data.update({
+            where: {
+              id: seeding_data_pointer.id
+            },
+            data:seeding_data_to_update
+          })
 
           // If the lenght of the rows to process is greater then 50
           // Then sleep for 1 min to make next set of request
-          if (row_completed_processing.length > 50) {
+          if (percentage_completed !== 100) {
             console.log("called sleep");
             await sleep(100000);
           }
@@ -179,6 +251,7 @@ exports.onboard_member_google_sheet = async (req, res) => {
 
       update_sheet.then((result) => {
         console.log("completed");
+        if(req.body === undefined) return;
         return res
           .status(201)
           .json({
@@ -188,6 +261,8 @@ exports.onboard_member_google_sheet = async (req, res) => {
           .send();
       });
     } catch (err) {
+      console.log(err);
+      if(req.body === undefined) return;
       return res.status(500).json({ message: "Internal Server Error" }).send();
     }
   });

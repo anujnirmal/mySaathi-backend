@@ -39,7 +39,7 @@ npm run dev
 * **Dashboard User** - It refers to the admin and super admin with access to dashboard
 * **Members** - It refers to the end users, in this case these people will be accessing the services through android and ios app
 
-  
+
 # Server Features  
 This section describes some features and services that this backend server offers
 
@@ -53,7 +53,6 @@ There are two roles available, one **ADMIN** & **SUPERADMIN**, here the Admin is
 #### Authentication - Members
 * Members can only login through mobile app, IOS or Android
 * One members can login to "n" number of devices ***Limiting the number of devices in which users can login needs to be discussed***
-
 
 #### News 
 * Dashboard user can create a news

@@ -1,6 +1,8 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
 const cors = require("cors");
+const cron = require('node-cron');
+const member_onboarding_controller = require("./controllers/memberOnboarding/member.onboarding.controller");
 require('dotenv').config();
 
 
@@ -36,6 +38,13 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to mySaaThi Server" });
 });
+
+// Setting up cron job to onboard members
+cron.schedule('27 22 * * Sat', () => {
+  member_onboarding_controller.onboard_member_google_sheet("", "", true);  
+});
+
+// TODO: write another cron job to reset member balance one 1st Jan
 
 // Basic Terminology
 // Dashboard Users - these are admins, super admins access to the dashboard

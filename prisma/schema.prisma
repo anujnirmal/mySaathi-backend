@@ -20,7 +20,6 @@ model dashboard_users {
   refresh_token           String?
   expiry_at               DateTime?
   member_bank_transaction member_bank_transaction[]
-  seeding_data            seeding_data[]
 }
 
 model news {
@@ -54,8 +53,8 @@ model members {
   full_name               String
   mobile_number           String                    @unique
   alternate_mobile_number String?
-  aadhaar_number          String                   
-  pancard_number          String                    
+  aadhaar_number          String
+  pancard_number          String
   address                 String
   date_of_birth           String?
   gender                  GENDER?
@@ -152,12 +151,13 @@ model hospitals {
 }
 
 model seeding_data {
-  id                  Int     @id @default(autoincrement())
-  date                DateTime
-  admin_name          String
-  status              String
-  admin              dashboard_users @relation(fields: [id], references: [id])
-  admin_id           Int
+  id         Int             @id @default(autoincrement())
+  date       DateTime
+  admin_name String
+  percentage  String?
+  status     String?
+  error_logs String?
+  dublicate_error_logs String?
 }
 
 model notification_tokens {

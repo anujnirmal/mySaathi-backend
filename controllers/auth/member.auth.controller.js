@@ -153,7 +153,7 @@ exports.member_login_check_mobile_number = async (req, res) => {
 // and login
 exports.member_login_or_create_password = async (req, res) => {
   // const { mobile_number, device_id } = req.body;
-  const { mobile_number, password, device_id, language } = req.body;
+  const { mobile_number, password, device_id, language, fcm_token } = req.body;
 
   console.log(req.body);
 
@@ -241,7 +241,7 @@ exports.member_login_or_create_password = async (req, res) => {
       }
     }
 
-    // Update Language
+    // Update Language && and fcm token
     await prisma.members
       .update({
         where: {
@@ -249,6 +249,19 @@ exports.member_login_or_create_password = async (req, res) => {
         },
         data: {
           language: language,
+          notification_token: {
+            upsert: {
+              where: {
+                fcm_token: fcm_token
+              },
+              update: {
+                fcm_token: fcm_token
+              },
+              create: {
+                fcm_token: fcm_token
+              }
+            }
+          }
         },
       })
       .then(async (language_updated) => {
