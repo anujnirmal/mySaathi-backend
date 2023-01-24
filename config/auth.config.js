@@ -9,8 +9,8 @@ module.exports = {
   // admin_jwt_refreshexpiration: 120,  // 2 minutes
   // member_jwt_expiration: 60,          // 1 minute
   // member_jwt_refreshexpiration: 120,  // 2 minutes
-  admin_jwt_expiration: 18000,          // 5 hourse
+  admin_jwt_expiration: 18000,          // 5 hourse 
   admin_jwt_refreshexpiration: 36000,  // 2 minutes
-  member_jwt_expiration: 60,          // 1 minute
-  member_jwt_refreshexpiration: 240,  // 2 minutes
+  member_jwt_expiration: 18000,          // 1 minute
+  member_jwt_refreshexpiration: 36000,  // 2 minutes
 };
