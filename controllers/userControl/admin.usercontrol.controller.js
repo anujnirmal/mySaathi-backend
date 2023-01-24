@@ -804,3 +804,37 @@ exports.restore_members = async (req, res) => {
       return res.status(500).json({ message: "Intenral Server Error" }).send();
     });
 };
+
+// Update member password
+exports.update_member_password = async (req, res) => {
+  const { member_id, new_password } = req.body;
+
+  if (member_id === null || member_id === undefined) {
+    return res.status(404).json({ message: "No Ids found" }).send();
+  }
+
+  if (new_password === null || new_password === undefined) {
+    return res.status(404).json({ message: "No Password found" }).send();
+  }
+
+  await prisma.members
+    .update({
+      where: {
+        id: member_id,
+      },
+      data: {
+        password: bcrypt.hashSync(new_password, 8),
+      },
+    })
+    .then((member) => {
+      // news.count == 0 : record not found or none deleted
+      return res
+        .status(200)
+        .json({ message: "Successfully updated member password" })
+        .send();
+    })
+    .catch((err) => {
+      logger.log(err);
+      return res.status(500).json({ message: "Intenral Server Error" }).send();
+    });
+};

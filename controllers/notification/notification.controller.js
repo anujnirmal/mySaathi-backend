@@ -347,7 +347,7 @@ exports.get_notification = async (req, res) => {
       },
     })
     .then(async (result) => {
-      console.log(result);
+      console.log(JSON.stringify(result));
       return res
         .json({
           notificaion: result[0].notification,

@@ -36,6 +36,7 @@ module.exports = function(app) {
   app.post("/api/admin/get_all_deleted_members", authJwt.verifyToken, controller.get_all_deleted_members);
   app.post("/api/admin/create_member", authJwt.verifyToken, controller.create_member);
   app.put("/api/admin/update_member", authJwt.verifyToken, controller.update_member);
+  app.put("/api/admin/updat_member_password", authJwt.verifyToken, controller.update_member_password);
   app.delete("/api/admin/delete_members", authJwt.verifyToken, controller.delete_members);
   app.delete("/api/admin/delete_child", authJwt.verifyToken, controller.delete_child);
   app.post("/api/admin/restore_members", authJwt.verifyToken, controller.restore_members);
