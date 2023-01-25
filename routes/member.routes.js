@@ -17,7 +17,7 @@ module.exports = function (app) {
   // -----
   // NEWS
   // -----
-  // app.get("/api/news/get_all_news", authJwt.verifyToken, news_controller.get_all_news);
+  app.post("/api/news/get_news_by_language", news_controller.get_news_by_language);
 
   // -----
   // LOGIN

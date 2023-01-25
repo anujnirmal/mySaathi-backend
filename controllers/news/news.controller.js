@@ -26,17 +26,19 @@ exports.get_news_by_language = async (req, res) => {
 
   const { language } = req.body;
 
+  console.log(language);
+
   if (language === "" || language === "selectedLanguage") {
     return res.status(422).json({ message: "Please select a language" }).send();
   }
   await prisma.news
     .findMany({
       where: {
-        language: language
+        language: language.toLowerCase()
       }
     })
     .then((news) => {
-      // console.log(news);
+      console.log(news);
       let data = news;
       converToUTCToDate(news, data);
       return res.status(200).json({ data: data }).send();
