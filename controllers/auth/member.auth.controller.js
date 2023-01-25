@@ -592,8 +592,10 @@ exports.member_resend_otp = async (req, res) => {
 // take the access tokens devices id and delete it from db
 // check for the time
 exports.member_log_out = async (req, res) => {
-  const { member_id, fcm_token } = req.body;
-  const { device_id } = req.user; // this is provided by the jwt token from the middle where
+  const { member_id, fcm_token, device_id } = req.body;
+  // const { device_id } = req.user; // this is provided by the jwt token from the middle where
+
+  console.log(req.body);
 
   let invalidate_before_time = new Date();
 

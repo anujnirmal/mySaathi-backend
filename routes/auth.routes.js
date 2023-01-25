@@ -23,7 +23,7 @@ module.exports = function(app) {
   // -----
   // LOGOUT ROUTES FOR MEMBER
   // -----
-  app.post("/api/auth/member/log_out", authJwt.verifyToken, member_auth_controller.member_log_out); 
+  app.post("/api/auth/member/log_out", member_auth_controller.member_log_out); 
   app.post("/api/auth/member/log_out_all", authJwt.verifyToken, member_auth_controller.member_log_out_from_all_devices); 
   
   // -----
