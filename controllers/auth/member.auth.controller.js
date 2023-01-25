@@ -592,7 +592,7 @@ exports.member_resend_otp = async (req, res) => {
 // take the access tokens devices id and delete it from db
 // check for the time
 exports.member_log_out = async (req, res) => {
-  const { member_id, fcm_token, device_id } = req.body;
+  const { member_id, fcm_token } = req.body;
   // const { device_id } = req.user; // this is provided by the jwt token from the middle where
 
   console.log(req.body);
@@ -601,43 +601,25 @@ exports.member_log_out = async (req, res) => {
 
   // Find the member using the mobile_number
   // then delete the refresh token within the the "refresh_tokens" table using the device id
-  await prisma.refresh_tokens
+
+  await prisma.members
     .update({
       where: {
-        device_id: device_id, // got device id from req.user
+        id: member_id,
       },
       data: {
-        refresh_token: "",
-        invalidate_before: invalidate_before_time,
+        notification_token: {
+          delete: {
+            fcm_token: fcm_token,
+          },
+        },
       },
     })
-    .then(async (result) => {
-      await prisma.members
-        .update({
-          where: {
-            id: member_id,
-          },
-          data: {
-            notification_token: {
-              delete: {
-                fcm_token: fcm_token,
-              },
-            },
-          },
-        })
-        .then(() => {
-          return res
-            .status(200)
-            .json({ message: "Successfully logged out user" })
-            .send();
-        })
-        .catch((err) => {
-          console.log(err);
-          return res
-            .status(500)
-            .json({ message: "Internal server error" })
-            .send();
-        });
+    .then(() => {
+      return res
+        .status(200)
+        .json({ message: "Successfully logged out user" })
+        .send();
     })
     .catch((err) => {
       console.log(err);
