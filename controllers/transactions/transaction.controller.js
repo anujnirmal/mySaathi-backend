@@ -1,7 +1,10 @@
 const db = require("../../models");
 const { converToUTCToDate } = require("../../helper/helper.functions");
 const logger = require("../../logger/logger");
-const { get_fcm_tokens, send_push_notification } = require("../notification/push.notification.controller");
+const {
+  get_fcm_tokens,
+  send_push_notification,
+} = require("../notification/push.notification.controller");
 
 const prisma = db.prisma; // Creating an instance of the databse
 
@@ -9,7 +12,7 @@ const prisma = db.prisma; // Creating an instance of the databse
 exports.get_all_transaction_data = async (req, res) => {
   await prisma.member_bank_transaction
     .findMany({})
-    .then((bank_transaction) => { 
+    .then((bank_transaction) => {
       console.log(bank_transaction);
       let data = bank_transaction;
       // convertUTCToDate(news, data);
@@ -40,8 +43,8 @@ exports.get_transaction_data_by_member_id = async (req, res) => {
         member_id: member_id,
       },
       include: {
-        receipts: true
-      }
+        receipts: true,
+      },
     })
     .then((bank_transaction) => {
       // console.log(news);
@@ -63,7 +66,7 @@ exports.get_all_pending_transaction = async (req, res) => {
         status: "PENDING",
       },
       orderBy: {
-        requested_date: 'desc'
+        requested_date: "desc",
       },
       include: {
         member: true,
@@ -191,7 +194,7 @@ exports.add_receipts = async (req, res) => {
       .send();
   }
 
-  if (member_id === null || member_id === undefined || member_id.length === 0 )  {
+  if (member_id === null || member_id === undefined || member_id.length === 0) {
     // 422 - for validation error
     return res
       .status(422)
@@ -226,7 +229,7 @@ exports.add_receipts = async (req, res) => {
           },
         },
       },
-    }); 
+    });
 
     console.log(transaction);
 
@@ -257,7 +260,7 @@ exports.accept_transaction = async (req, res) => {
   }
 
   if (
-    transaction_id === null || 
+    transaction_id === null ||
     transaction_id === undefined ||
     member_id === null ||
     member_id === undefined
@@ -305,38 +308,107 @@ exports.accept_transaction = async (req, res) => {
 
     let new_member_balance = await prisma.members.update({
       where: {
-        id: member_id
+        id: member_id,
       },
       data: {
-        balance_amount: new_balance.toString()
-      }
+        balance_amount: new_balance.toString(),
+      },
     });
 
+    let messageContent;
 
-    // Send notification
-    let fcm_token = await get_fcm_tokens(false, [member_id], false);
-    console.log("FCM token from accept transaction" + fcm_token);
-    let content = {
-      body: "Your request for amount " + amount_requested + " has been approved",
-      title: "Transaction Approved"
+    let englishContent = {
+      title: "Transaction Approved",
+      body: `Your request for transaction of amount ${amount_requested} has been accepted`,
+    };
 
-    }
-    send_push_notification(content, fcm_token)
-    
-    return res
-      .status(200)
-      .json({
-        message: "Successfully updated the transaction",
-        data: transaction,
+    let hindiContent = {
+      title: "लेन-देन स्वीकृत",
+      body: `${amount_requested} राशि के लेन-देन के लिए आपका अनुरोध स्वीकार कर लिया गया है`,
+    };
+
+    let marathiContent = {
+      title: "व्यवहार मंजूर",
+      body: `${amount_requested} रकमेच्या व्यवहारासाठी तुमची विनंती स्वीकारण्यात आली आहे"`,
+    };
+
+    await prisma.members
+      .findFirst({
+        where: {
+          id: member_id,
+        },
       })
-      .send();
+      .then(async (member_language) => {
+        if (!member_language.language) {
+          messageContent = englishContent;
+        }
+
+        if (member_language.language === "ENGLISH") {
+          messageContent = englishContent;
+        }
+
+        if (member_language.language === "HINDI") {
+          messageContent = hindiContent;
+        }
+
+        if (member_language.language === "MARATHI") {
+          messageContent = marathiContent;
+        }
+
+        // Send notification
+        let fcm_token = await get_fcm_tokens(false, [member_id], false);
+        console.log("FCM token from accept transaction" + fcm_token);
+        let content = {
+          body: messageContent.body,
+          title: messageContent.title,
+        };
+        send_push_notification(content, fcm_token);
+
+        await prisma.notifications
+          .create({
+            data: {
+              hindi_title: hindiContent.title,
+              hindi_body: hindiContent.body,
+              marathi_title: marathiContent.title,
+              marathi_body: marathiContent.body,
+              english_title: englishContent.title,
+              english_body: englishContent.body,
+              member: {
+                connect: {
+                  id: member_id,
+                },
+              },
+            },
+          })
+          .then((result) => {
+            return res
+              .status(200)
+              .json({
+                message: "Successfully updated the transaction",
+                data: transaction,
+              })
+              .send();
+          })
+          .catch((err) => {
+            console.log(err);
+            return res
+              .status(500)
+              .json({ message: "Internal Server Error" })
+              .send();
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+        return res
+          .status(500)
+          .json({ message: "Internal Server Error" })
+          .send();
+      });
   } catch (err) {
     logger.error(err);
     return res.status(500).json({ message: "Intenral Server Error" }).send();
   }
 };
-
-
 
 // Reject the transaction requested by the member
 exports.reject_transaction = async (req, res) => {
@@ -352,7 +424,7 @@ exports.reject_transaction = async (req, res) => {
   }
 
   if (
-    transaction_id === null || 
+    transaction_id === null ||
     transaction_id === undefined ||
     member_id === null ||
     member_id === undefined
@@ -370,7 +442,6 @@ exports.reject_transaction = async (req, res) => {
   }
 
   try {
-
     let transaction = await prisma.member_bank_transaction.update({
       where: {
         id: transaction_id,
@@ -384,23 +455,94 @@ exports.reject_transaction = async (req, res) => {
       },
     });
 
-     // Send notification
-     let fcm_token = await get_fcm_tokens(false, [member_id], false);
-     console.log("FCM token from accept transaction" + fcm_token);
-     let content = {
-       body: "Your request for amount " + amount_requested + " has been rejected",
-       title: "Transaction Rejected"
- 
-     }
-     send_push_notification(content, fcm_token)
+    let messageContent;
+    let englishContent = {
+      title: "Transaction Rejected",
+      body: `Your request for transaction of amount ${amount_requested} has been accepted`,
+    };
 
-    return res
-      .status(200)
-      .json({
-        message: "Successfully rejected the transaction",
-        data: transaction,
+    let hindiContent = {
+      title: "लेन-देन अस्वीकृत",
+      body: `${amount_requested} राशि के लेन-देन के लिए आपका अनुरोध स्वीकार कर लिया गया है`,
+    };
+
+    let marathiContent = {
+      title: "व्यवहार नाकारला",
+      body: `${amount_requested} रकमेच्या व्यवहाराची तुमची विनंती स्वीकारण्यात आली आहे`,
+    };
+
+    await prisma.members
+      .findFirst({
+        where: {
+          id: member_id,
+        },
       })
-      .send();
+      .then(async (member_language) => {
+        if (!member_language.language) {
+          messageContent = englishContent;
+        }
+
+        if (member_language.language === "ENGLISH") {
+          messageContent = englishContent;
+        }
+
+        if (member_language.language === "HINDI") {
+          messageContent = hindiContent;
+        }
+
+        if (member_language.language === "MARATHI") {
+          marathiContent = marathiContent;
+        }
+
+        // Send notification
+        let fcm_token = await get_fcm_tokens(false, [member_id], false);
+        console.log("FCM token from accept transaction" + fcm_token);
+        let content = {
+          body: messageContent.body,
+          title: messageContent.title,
+        };
+        send_push_notification(content, fcm_token);
+
+        await prisma.notifications
+          .create({
+            data: {
+              hindi_title: hindiContent.title,
+              hindi_body: hindiContent.body,
+              marathi_title: marathiContent.title,
+              marathi_body: marathiContent.body,
+              english_title: englishContent.title,
+              english_body: englishContent.body,
+              member: {
+                connect: {
+                  id: member_id,
+                },
+              },
+            },
+          })
+          .then((result) => {
+            return res
+              .status(200)
+              .json({
+                message: "Successfully updated the transaction",
+                data: transaction,
+              })
+              .send();
+          })
+          .catch((err) => {
+            console.log(err);
+            return res
+              .status(500)
+              .json({ message: "Internal Server Error" })
+              .send();
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+        return res
+          .status(500)
+          .json({ message: "Internal Server Error" })
+          .send();
+      });
   } catch (err) {
     logger.error(err);
     return res.status(500).json({ message: "Intenral Server Error" }).send();

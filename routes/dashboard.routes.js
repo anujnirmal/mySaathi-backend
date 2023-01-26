@@ -4,6 +4,7 @@ const news_controller = require("../controllers/news/news.controller");
 const notification_controller = require("../controllers/notification/notification.controller");
 const transaction_controller = require("../controllers/transactions/transaction.controller");
 const member_onboarding_controller = require("../controllers/memberOnboarding/member.onboarding.controller");
+const file_upload_controller = require("../controllers/fileUpload/file.upload.controller");
 
 module.exports = function(app) {
   app.use(function(req, res, next) {
@@ -50,6 +51,7 @@ module.exports = function(app) {
   app.post("/api/news/get_all_news", news_controller.get_all_news);
   app.post("/api/news/get_news_by_language", news_controller.get_news_by_language);
   app.post("/api/news/create_news", authJwt.verifyToken, news_controller.create_news);
+  app.post("/api/news/upload_featured_image", file_upload_controller.upload_featured_image);
   app.put("/api/news/update_news", authJwt.verifyToken, news_controller.update_news);
   app.delete("/api/news/delete_news", authJwt.verifyToken, news_controller.delete_news);
 
@@ -60,6 +62,7 @@ module.exports = function(app) {
   app.post("/api/notification/cancel_notification", authJwt.verifyToken, notification_controller.cancel_notification);
   app.post("/api/notification/create_notifications", notification_controller.create_notification);
   app.post("/api/notification/create_notifications", authJwt.verifyToken, notification_controller.create_notification);
+ 
 
   // -----
   // TRANSACTIONS
@@ -71,6 +74,11 @@ module.exports = function(app) {
   app.put("/api/transactions/accept_pending_transaction", transaction_controller.accept_transaction);
   app.put("/api/transactions/reject_pending_transaction", transaction_controller.reject_transaction);
 
-
+  // -----
+  // FILE UPLOAD
+  // -----
+  app.post("/api/fileupload/featured_image", file_upload_controller.upload_featured_image);
+  app.post("/api/notification/upload_notification_image",  file_upload_controller.upload_notification_image);
+  app.post("/api/fileupload/upload_member_photo",  file_upload_controller.upload_member_photo);
 };
 

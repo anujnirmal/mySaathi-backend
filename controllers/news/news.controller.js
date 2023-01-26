@@ -1,9 +1,11 @@
 const db = require("../../models");
 const { converToUTCToDate } = require("../../helper/helper.functions");
-const { send_push_notification, get_fcm_tokens } = require("../notification/push.notification.controller");
+const {
+  send_push_notification,
+  get_fcm_tokens,
+} = require("../notification/push.notification.controller");
 
 const prisma = db.prisma; // Creating an instance of the databse
-
 
 // Get all news
 exports.get_all_news = async (req, res) => {
@@ -23,7 +25,6 @@ exports.get_all_news = async (req, res) => {
 
 // Get all news
 exports.get_news_by_language = async (req, res) => {
-
   const { language } = req.body;
 
   console.log(language);
@@ -34,8 +35,8 @@ exports.get_news_by_language = async (req, res) => {
   await prisma.news
     .findMany({
       where: {
-        language: language.toLowerCase()
-      }
+        language: language.toLowerCase(),
+      },
     })
     .then((news) => {
       console.log(news);
@@ -56,6 +57,10 @@ exports.create_news = async (req, res) => {
   // it on the frontend
   const { title, body, image_url, plainText: plain_text, language } = req.body;
 
+  console.log(req.body);
+
+  let isLanguageUndefined = false;
+
   // Check for response length
   if (title.length == 0) {
     // 422 - for validation error
@@ -67,8 +72,13 @@ exports.create_news = async (req, res) => {
     return res.status(422).json({ message: "Body cannot be null" }).send();
   }
 
-  if (language === "" || language === "selectedLanguage") {
-    return res.status(422).json({ message: "Please select a language" }).send();
+  if (
+    language === undefined ||
+    language === "selectedLanguage" ||
+    language === ""
+  ) {
+    isLanguageUndefined = true;
+    // return res.status(422).json({ message: "Please select a language" }).send();
   }
 
   try {
@@ -78,26 +88,46 @@ exports.create_news = async (req, res) => {
         body: body,
         image_url: image_url,
         plain_text_body: plain_text,
-        language: language,
+        language: isLanguageUndefined ? "ENGLISH" : language,
       },
     });
-    
+
     // Get the fcm tokens
-    let fcm_tokens = await get_fcm_tokens(true, [], true, language.toUpperCase());
-    let content = {
-      body: title,
-      title: "Check out this new post",
-      image_url: image_url
+    let fcm_tokens = await get_fcm_tokens(
+      true,
+      [],
+      true,
+      isLanguageUndefined ? "ENGLISH" : language.toUpperCase()
+    );
+
+    let content_to_send;
+
+    if (isLanguageUndefined || language.toUpperCase() === "ENGLISH") {
+      content_to_send = {
+        body: title,
+        title: "Check out this new post",
+        image_url: image_url,
+      };
+    } else if (language.toUpperCase() === "HINDI") {
+      content_to_send = {
+        body: title,
+        title: "इस नई पोस्ट को देखें",
+        image_url: image_url,
+      };
+    } else if (language.toUpperCase() === "MARATHI") {
+      content_to_send = {
+        body: title,
+        title: "हे नवीन पोस्ट पहा",
+        image_url: image_url,
+      };
     }
 
-    console.log("Fcm" + fcm_tokens);
-    send_push_notification(content, fcm_tokens)
+    send_push_notification(content_to_send, fcm_tokens);
 
     return res
       .status(201)
       .json({ message: "Successfully created news", data: [result] })
       .send();
-
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Intenral Server Error" }).send();

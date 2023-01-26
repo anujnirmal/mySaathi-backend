@@ -217,6 +217,7 @@ exports.create_member = async (req, res) => {
     address,
     pincode,
     gender,
+    ycfid: ycf_id,
     bankName: bank_name,
     bankAccountNumber: bank_account_number,
     ifscCode: ifsc_code,
@@ -318,7 +319,7 @@ exports.create_member = async (req, res) => {
 
   if (children?.count === 0 || children === undefined) {
     memberData = {
-      // ycf_id: new_ycf_id,
+      ycf_id: ycf_id,
       full_name: full_name,
       mobile_number: mobile_number.toString(),
       aadhaar_number: aadhaar_number.toString(),
@@ -367,7 +368,7 @@ exports.create_member = async (req, res) => {
     }
 
     memberData = {
-      // ycf_id: new_ycf_id,
+      ycf_id: ycf_id,
       full_name: full_name,
       mobile_number: mobile_number.toString(),
       aadhaar_number: aadhaar_number.toString(),
@@ -416,32 +417,7 @@ exports.create_member = async (req, res) => {
         .json({ message: "Successfully created member", data: member })
         // .status(201)
         .send();
-      // Update the number in the ycf counter
-      // await prisma.ycf_id_counter
-      //   .update({
-      //     where: {
-      //       id: 1,
-      //     },
-      //     data: {
-      //       last_ycf_id: new_ycf_id,
-      //     },
-      //   })
-      //   .then((result) => {
-      //     return (
-      //       res
-      //         .status(201)
-      //         .json({ message: "Successfully created member", data: member })
-      //         // .status(201)
-      //         .send()
-      //     );
-      //   })
-      //   .catch((err) => {
-      //     logger.error(err);
-      //     return res
-      //       .status(500)
-      //       .json({ message: " Internal Server Error" })
-      //       .send();
-      //   });
+  
     })
     .catch((err) => {
       logger.error(err);
@@ -468,6 +444,7 @@ exports.update_member = async (req, res) => {
     address,
     pincode,
     bank_id,
+    ycfid: ycf_id,
     bankName: bank_name,
     bankAccountNumber: bank_account_number,
     ifscCode: ifsc_code,
@@ -552,10 +529,11 @@ exports.update_member = async (req, res) => {
       },
       data: {
         full_name: full_name,
+        ycf_id: ycf_id,
         mobile_number: mobile_number.toString(),
         aadhaar_number: aadhaar_number.toString(),
         pancard_number: pancard_number,
-        profile_photo: profile_photo.toString(),
+        profile_photo: profile_photo?.toString(),
         address: address,
         pincode: pincode,
         modules: modules,
@@ -838,3 +816,39 @@ exports.update_member_password = async (req, res) => {
       return res.status(500).json({ message: "Intenral Server Error" }).send();
     });
 };
+
+
+// Update member password
+exports.add_member_photo = async (req, res) => {
+  const { member_id, image_url } = req.body;
+
+  if (member_id === null || member_id === undefined) {
+    return res.status(404).json({ message: "No Ids found" }).send();
+  }
+
+  if (image_url === null || image_url === undefined) {
+    return res.status(404).json({ message: "No Password found" }).send();
+  }
+
+  await prisma.members
+    .update({
+      where: {
+        id: member_id,
+      },
+      data: {
+        profile_photo: image_url,
+      },
+    })
+    .then((member) => {
+      // news.count == 0 : record not found or none deleted
+      return res
+        .status(200)
+        .json({ message: "Successfully added profile photo", image_url: image_url })
+        .send();
+    })
+    .catch((err) => {
+      logger.log(err);
+      return res.status(500).json({ message: "Intenral Server Error" }).send();
+    });
+};
+

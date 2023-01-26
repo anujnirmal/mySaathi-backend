@@ -601,25 +601,46 @@ exports.member_log_out = async (req, res) => {
 
   // Find the member using the mobile_number
   // then delete the refresh token within the the "refresh_tokens" table using the device id
-
-  await prisma.members
-    .update({
+  await prisma.notification_tokens
+    .findFirst({
       where: {
-        id: member_id,
-      },
-      data: {
-        notification_token: {
-          delete: {
-            fcm_token: fcm_token,
-          },
-        },
+        fcm_token: fcm_token,
       },
     })
-    .then(() => {
-      return res
-        .status(200)
-        .json({ message: "Successfully logged out user" })
-        .send();
+    .then(async (token) => {
+      if (!token) {
+        return res
+          .status(200)
+          .json({ message: "Successfully logged out user" })
+          .send();
+      }
+
+      await prisma.members
+        .update({
+          where: {
+            id: member_id,
+          },
+          data: {
+            notification_token: {
+              delete: {
+                fcm_token: fcm_token,
+              },
+            },
+          },
+        })
+        .then(() => {
+          return res
+            .status(200)
+            .json({ message: "Successfully logged out user" })
+            .send();
+        })
+        .catch((err) => {
+          console.log(err);
+          return res
+            .status(500)
+            .json({ message: "Internal server error" })
+            .send();
+        });
     })
     .catch((err) => {
       console.log(err);

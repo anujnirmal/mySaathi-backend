@@ -65,7 +65,6 @@ exports.get_fcm_tokens = async (
         });
       }
       
-      console.log("token is " + JSON.stringify(fcm_tokens));
 
       for (let i = 0; i < fcm_tokens.length; i++) {
         let all_fcm_tokens = fcm_tokens[i].notification_token;

@@ -4,25 +4,27 @@ const prisma = db.prisma; // Creating an instance of the databse
 
 // index of the column starting from 0 = 1
 const FULL_NAME = 0;
-const GENDER = 1;
-const MOBILE_NUMNER = 2;
-const ALTERNATE_MOBILE_NUMBER = 3;
-const DATE_OF_BIRTH = 4;
-const ADDRESS = 5;
-const PINCODE = 6;
-const REGISTERED_UNION_MEMBER = 7;
-const SAATHI_MEMBER_TILL_2022 = 8;
-const AADHAAR_NUMBER = 9;
-const PANCARD_NUMBER = 10;
-const BANK_NAME = 11;
-const BANK_ACCOUNT_NUMBER = 12;
-const BANK_IFSC_CODE = 13;
-const BANK_BRANCH_NAME = 14;
-const MONTHLY_SALARY_RANGE = 15;
-const RETIRED_PERSON = 16;
-const DISABLED_PERSON = 17;
-const DISABILITY = 18;
-const BENEFIT_SELECTED = 19;
+const REVISED_NAME = 1;
+const YCF_ID = 2
+const GENDER = 3;
+const MOBILE_NUMNER = 4;
+const ALTERNATE_MOBILE_NUMBER = 5;
+const DATE_OF_BIRTH = 6;
+const ADDRESS = 7;
+const PINCODE = 8;
+const REGISTERED_UNION_MEMBER = 9;
+const SAATHI_MEMBER_TILL_2022 = 10;
+const AADHAAR_NUMBER = 11;
+const PANCARD_NUMBER = 12;
+const BANK_NAME = 13;
+const BANK_ACCOUNT_NUMBER = 14;
+const BANK_IFSC_CODE = 15;
+const BANK_BRANCH_NAME = 16;
+const MONTHLY_SALARY_RANGE = 17;
+const RETIRED_PERSON = 18;
+const DISABLED_PERSON = 19;
+const DISABILITY = 20;
+const BENEFIT_SELECTED = 21;
 
 exports.onboard_member_google_sheet = async (req, res) => {
 
@@ -37,11 +39,12 @@ exports.onboard_member_google_sheet = async (req, res) => {
   }
     
   // Sheet name as it is on the google sheet
-  const SHEET_TITLE = "Eligible Saathi members";
+  const SHEET_TITLE = "201 Education";
+  const GOOGLE_SHEET_ID = "1a_oPIB1HA0T5aPHxsbMpGt3fKTqWAyLS6VWUv9rt6j8"; 
 
   // Initialize google sheet with the sheet id
   let spread_sheet = new GoogleSpreadsheet(
-    "1bsucPaiwm87geFnfOm4jfhjkWSXd4TBSlyZqtDTRDz0"
+    GOOGLE_SHEET_ID
   );
 
   await spread_sheet.useServiceAccountAuth({
@@ -166,7 +169,7 @@ exports.onboard_member_google_sheet = async (req, res) => {
 
         for (let i = 0; i < row_completed_processing.length; i += 50) {
           spread_sheet = new GoogleSpreadsheet(
-            "1bsucPaiwm87geFnfOm4jfhjkWSXd4TBSlyZqtDTRDz0"
+            GOOGLE_SHEET_ID
           );
 
           await spread_sheet.useServiceAccountAuth({
@@ -195,15 +198,13 @@ exports.onboard_member_google_sheet = async (req, res) => {
               row_completed_processing.length -
                 (row_completed_processing.length % 50)
             ) {
-              console.log("Hey there");
               loop_times = i + (row_completed_processing.length % 50);
             } else {
-              console.log("else");
               loop_times = 50 + i;
             }
           }
 
-          console.log("Time to loop " +loop_times);
+          console.log("Time to loop " + loop_times);
 
           for (let j = i; j < loop_times; j++) {
             let row_number = row_completed_processing[j]?.row_number - 2;
@@ -212,7 +213,7 @@ exports.onboard_member_google_sheet = async (req, res) => {
               rows[row_number].Seeded = "Yes";
               await rows[row_number].save();
             } else {
-              rows[row_number].Seeded = "Yes";
+              rows[row_number].Seeded = "No";
               await rows[row_number].save();
             }
           }
@@ -280,11 +281,14 @@ const create_seeding_member_object = (rows) => {
   rows.forEach((row) => {
     let data = row._rawData;
     let member = {};
-    if (row._rawData[20] !== "Yes") {
+    if (row._rawData[22] !== "Yes") {
+      console.log(data);
       member = {
         row_number: row._rowNumber,
         data: {
           full_name: data[FULL_NAME],
+          ycf_id: data[YCF_ID],
+          revised_name: data[REVISED_NAME],
           mobile_number: data[MOBILE_NUMNER],
           alternate_mobile_number: data[ALTERNATE_MOBILE_NUMBER],
           aadhaar_number: data[AADHAAR_NUMBER],

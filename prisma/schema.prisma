@@ -54,6 +54,7 @@ model notifications {
 model members {
   id                      Int                       @id @default(autoincrement())
   ycf_id                  String?                   @unique @db.VarChar(255)
+  revised_name            String?
   full_name               String
   mobile_number           String                    @unique
   alternate_mobile_number String?
