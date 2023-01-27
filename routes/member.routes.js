@@ -33,6 +33,11 @@ module.exports = function (app) {
   // -----
   app.post("/api/member/language/update", authJwt.verifyToken ,member_language_controller.update_member_language);
 
+   // -----
+  // GET MEMBER DETAIL
+  // -----
+  app.post("/api/member/get_all_data", authJwt.verifyToken , member_auth_controller.member_get_all_data);
+
   // -----
   // NOTIFICATION
   // -----
@@ -56,7 +61,7 @@ module.exports = function (app) {
   // -----
   // UPLOAD & ADD MEMBER PHOTO
   // -----
-  app.post("/api/fileupload/upload_member_photo", file_upload_controller.upload_member_photo);
+  app.put("/api/fileupload/upload_member_photo", file_upload_controller.upload_member_photo);
   app.post("/api/fileupload/add_member_photo", admin_usercontrol_controller.add_member_photo);
 
 };

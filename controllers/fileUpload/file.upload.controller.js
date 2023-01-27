@@ -72,7 +72,7 @@ exports.upload_notification_image = async (req, res) => {
 exports.upload_receipt = async (req, res) => {
   // Add folder name to be accessed by the multer to create folder
   let folder_name = "receipts"
-  req.folder_name = "receipts";
+  req.folder_name = folder_name;
   upload(req, res, function (error, data) {
     if (error) {
       console.log(error);
@@ -89,8 +89,8 @@ exports.upload_receipt = async (req, res) => {
 
 exports.upload_member_photo = async (req, res) => {
   // Add folder name to be accessed by the multer to create folder
-  let folder_name = "receipts"
-  req.folder_name = "receipts";
+  let folder_name = "member-photos"
+  req.folder_name = folder_name;
   upload(req, res, function (error, data) {
     if (error) {
       console.log(error);

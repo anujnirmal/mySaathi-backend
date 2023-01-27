@@ -822,6 +822,8 @@ exports.update_member_password = async (req, res) => {
 exports.add_member_photo = async (req, res) => {
   const { member_id, image_url } = req.body;
 
+  console.log(req.body);
+
   if (member_id === null || member_id === undefined) {
     return res.status(404).json({ message: "No Ids found" }).send();
   }

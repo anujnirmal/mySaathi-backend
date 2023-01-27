@@ -355,6 +355,53 @@ exports.member_login_or_create_password = async (req, res) => {
   }
 };
 
+// use this to get member data
+exports.member_get_all_data = async (req, res) => {
+  // const { mobile_number, device_id } = req.body;
+  const { member_id } = req.body;
+
+  console.log(req.body);
+
+  if (member_id === null || member_id === undefined) {
+    return res
+      .status(400)
+      .json({ message: "Please send correct input" })
+      .send();
+  }
+
+  try {
+    // If success then
+    //  TODO: check with ketan about the member
+    let member = await prisma.members.findUnique({
+      where: {
+        id: member_id,
+      },
+      include: {
+        children: true,
+        bank_detail: true,
+      },
+    });
+
+    // If user does not exist
+    if (!member) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    return res
+      .json({
+        id: member.id,
+        member_detail: member
+      })
+      .status(200)
+      .send();
+
+    // Save the refresh token in the db
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Internal Server Error" }).send();
+  }
+};
+
 // Members can request a new otp during login process
 exports.member_get_otp = async (req, res) => {
   const { mobile_number } = req.body;
@@ -615,17 +662,10 @@ exports.member_log_out = async (req, res) => {
           .send();
       }
 
-      await prisma.members
-        .update({
+      await prisma.notification_tokens
+        .delete({
           where: {
-            id: member_id,
-          },
-          data: {
-            notification_token: {
-              delete: {
-                fcm_token: fcm_token,
-              },
-            },
+            fcm_token: fcm_token,
           },
         })
         .then(() => {
