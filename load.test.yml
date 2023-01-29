@@ -1,5 +1,5 @@
 config:
-  target: "https://anujnirmal.com"
+  target: "https://saathiserver.anujnirmal.com"
   phases:
     - duration: 60
       arrivalRate: 20
@@ -11,15 +11,35 @@ config:
     - duration: 500
       arrivalRate: 100
       name: "Sustained load"
+  processor: "./processor.js"
  
 scenarios:
-  - name: "Sign in flow and get news"
+  - name: "Sign up & Login flow"
     flow:
       - get:
           url: "/"
       - think: 1
       - post:
-          url: "/api/auth/admin/sign_in"
+          url: "/api/member/auth/login"
+          beforeRequest: generateSignupData
           json:
-            email: "anuj@gmail.com"
-            password: "Robotics2685!"
+            mobile_number: "{{ mobile_number }}"
+            password: "{{ password }}"
+            language: "ENGLISH"
+            device_id: "2685"
+            fcm_token: "{{ fcm_token }}"
+      - think: 2
+      - post:
+          url: "/api/member/language/update"
+          beforeRequest: generateSignupData
+          headers:
+            Content-Type: "application/json"
+            Accept: application/json
+          json:
+            member_id: "{{ member_id }}"
+            language: "HINDI"
+      - think: 2
+      - post:
+          url: "/api/fileupload/upload_receipts"
+          beforeRequest: setupMultipartFormData
+

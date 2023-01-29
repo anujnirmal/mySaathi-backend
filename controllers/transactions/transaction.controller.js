@@ -186,7 +186,7 @@ exports.add_receipts = async (req, res) => {
   console.log(req.body);
 
   // Check for response length
-  if (receipts.length === 0) {
+  if (receipts === null || receipts === undefined || receipts.length === 0) {
     // 422 - for validation error
     return res
       .status(422)
