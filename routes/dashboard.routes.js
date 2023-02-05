@@ -85,6 +85,6 @@ module.exports = function(app) {
   // -----
   // ANALYTICS
   // -----
-  app.post("/api/analytics/get_all_analytics",  analytics_controller.get_analytics);
+  app.post("/api/analytics/get_all_analytics", authJwt.verifyToken, analytics_controller.get_analytics);
 };
 
