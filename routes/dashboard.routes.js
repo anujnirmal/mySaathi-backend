@@ -5,6 +5,7 @@ const notification_controller = require("../controllers/notification/notificatio
 const transaction_controller = require("../controllers/transactions/transaction.controller");
 const member_onboarding_controller = require("../controllers/memberOnboarding/member.onboarding.controller");
 const file_upload_controller = require("../controllers/fileUpload/file.upload.controller");
+const analytics_controller = require("../controllers/analytics/analytics.controller");
 
 module.exports = function(app) {
   app.use(function(req, res, next) {
@@ -80,5 +81,10 @@ module.exports = function(app) {
   app.post("/api/fileupload/featured_image", file_upload_controller.upload_featured_image);
   app.post("/api/notification/upload_notification_image",  file_upload_controller.upload_notification_image);
   app.post("/api/fileupload/upload_member_photo",  file_upload_controller.upload_member_photo);
+
+  // -----
+  // ANALYTICS
+  // -----
+  app.post("/api/analytics/get_all_analytics",  analytics_controller.get_analytics);
 };
 
