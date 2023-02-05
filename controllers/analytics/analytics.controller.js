@@ -20,7 +20,29 @@ const count_household_members = (members, module) => {
 // get analytics for dashboard
 exports.get_analytics = async (req, res) => {
   try {
-    const total_members = await prisma.members.findMany({});
+    const total_members = await prisma.members.findMany({
+      where: {
+        trashed: false,
+      },
+    });
+
+    const trashed_members = await prisma.members.count({
+      where: {
+        trashed: true,
+      },
+    });
+
+    const dashboard_users = await prisma.dashboard_users.count({});
+    const news_count = await prisma.news.count({});
+    const transactions = await prisma.member_bank_transaction.findMany({});
+    
+    // Get all the pending claims
+    let pending_transactions = 0;
+    for (let i = 0; i < transactions.length; i++) {
+      if(transactions[i].status === "PENDING"){
+        pending_transactions++;
+      }
+    }
 
     let total_household_member_count = count_household_members(
       total_members,
@@ -38,9 +60,15 @@ exports.get_analytics = async (req, res) => {
         total_members: total_member_count,
         total_household_members: total_household_member_count,
         total_education_members: total_education_member_count,
+        trashed_members: trashed_members,
+        dashboard_users: dashboard_users,
+        news_count: news_count,
+        pending_claims: pending_transactions,
+        transactions: transactions,
       },
     });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({message: "Internal Server Error"}).send();
   }
 };
