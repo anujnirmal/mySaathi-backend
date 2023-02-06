@@ -243,7 +243,7 @@ exports.create_member = async (req, res) => {
   const FULL_NAME_LENGTH = 3;
   const ADDRESS_NAME_LENGTH = 10;
 
-  if (aadhaar_number.toString().length != AADHAAR_LENGTH) {
+  if (aadhaar_number?.toString().length != AADHAAR_LENGTH) {
     logger.error("Invalid aadhaar number");
     return res
       .status(404)
@@ -253,7 +253,7 @@ exports.create_member = async (req, res) => {
       .send();
   }
 
-  if (mobile_number.toString().length != MOBILE_NUMBER_LENGTH) {
+  if (mobile_number?.toString().length != MOBILE_NUMBER_LENGTH) {
     logger.error("Invalid mobile number");
     return res
       .status(404)
@@ -263,7 +263,7 @@ exports.create_member = async (req, res) => {
       .send();
   }
 
-  if (pancard_number.length != PAN_CARD_LENGTH) {
+  if (pancard_number?.length != PAN_CARD_LENGTH) {
     logger.error("Invalid pancard number");
     return res
       .status(404)
@@ -274,7 +274,7 @@ exports.create_member = async (req, res) => {
       .send();
   }
 
-  if (!(full_name.length > FULL_NAME_LENGTH)) {
+  if (!(full_name?.length > FULL_NAME_LENGTH)) {
     logger.error("Full name should be greater than " + FULL_NAME_LENGTH);
     return res
       .status(404)
@@ -285,7 +285,7 @@ exports.create_member = async (req, res) => {
       .send();
   }
 
-  if (!(address.length > ADDRESS_NAME_LENGTH)) {
+  if (!(address?.length > ADDRESS_NAME_LENGTH)) {
     logger.error("Address should be greater than " + ADDRESS_NAME_LENGTH);
     return res
       .status(404)
@@ -296,48 +296,29 @@ exports.create_member = async (req, res) => {
       .send();
   }
 
-  // console.log("new children" + JSON.stringify(childrenNew));
-  // let last_ycf_id;
-  // // get the last ycf id
-  // await prisma.ycf_id_counter
-  //   .findFirst({
-  //     where: {
-  //       id: 1,
-  //     },
-  //   })
-  //   .then((ycf) => {
-  //     last_ycf_id = ycf.last_ycf_id;
-  //   })
-  //   .catch((err) => {
-  //     logger.error(err);
-  //     return res.status(500).json({ message: "Internal Server Error" }).send();
-  //   });
-
-  // let new_ycf_id = incrementString(last_ycf_id);
-
   let memberData = {};
 
   if (children?.count === 0 || children === undefined) {
     memberData = {
       ycf_id: ycf_id,
       full_name: full_name,
-      mobile_number: mobile_number.toString(),
-      aadhaar_number: aadhaar_number.toString(),
+      mobile_number: mobile_number?.toString(),
+      aadhaar_number: aadhaar_number?.toString(),
       pancard_number: pancard_number,
-      profile_photo: profile_photo.toString(),
+      profile_photo: profile_photo?.toString(),
       address: address,
       pincode: pincode,
       modules: modules,
-      date_of_birth: date_of_birth.toString(),
+      date_of_birth: date_of_birth?.toString(),
       gender: gender,
-      alternate_mobile_number: alternate_mobile_number.toString(),
+      alternate_mobile_number: alternate_mobile_number?.toString(),
       trashed: false,
       yearly_quota: yearly_quota,
       balance_amount: yearly_quota,
       bank_detail: {
         create: {
           bank_name: bank_name,
-          bank_account_number: bank_account_number.toString(),
+          bank_account_number: bank_account_number?.toString(),
           ifsc_code: ifsc_code,
           bank_branch_name: bank_branch_name,
         },
@@ -370,23 +351,23 @@ exports.create_member = async (req, res) => {
     memberData = {
       ycf_id: ycf_id,
       full_name: full_name,
-      mobile_number: mobile_number.toString(),
-      aadhaar_number: aadhaar_number.toString(),
+      mobile_number: mobile_number?.toString(),
+      aadhaar_number: aadhaar_number?.toString(),
       pancard_number: pancard_number,
-      profile_photo: profile_photo.toString(),
+      profile_photo: profile_photo?.toString(),
       address: address,
       pincode: pincode,
       modules: modules,
       trashed: false,
-      date_of_birth: date_of_birth.toString(),
+      date_of_birth: date_of_birth?.toString(),
       gender: gender,
-      alternate_mobile_number: alternate_mobile_number.toString(),
+      alternate_mobile_number: alternate_mobile_number?.toString(),
       yearly_quota: yearly_quota,
       balance_amount: yearly_quota,
       bank_detail: {
         create: {
           bank_name: bank_name,
-          bank_account_number: bank_account_number.toString(),
+          bank_account_number: bank_account_number?.toString(),
           ifsc_code: ifsc_code,
           bank_branch_name: bank_branch_name,
         },
@@ -417,7 +398,6 @@ exports.create_member = async (req, res) => {
         .json({ message: "Successfully created member", data: member })
         // .status(201)
         .send();
-  
     })
     .catch((err) => {
       logger.error(err);
@@ -817,7 +797,6 @@ exports.update_member_password = async (req, res) => {
     });
 };
 
-
 // Update member password
 exports.add_member_photo = async (req, res) => {
   const { member_id, image_url } = req.body;
@@ -845,7 +824,10 @@ exports.add_member_photo = async (req, res) => {
       // news.count == 0 : record not found or none deleted
       return res
         .status(200)
-        .json({ message: "Successfully added profile photo", image_url: image_url })
+        .json({
+          message: "Successfully added profile photo",
+          image_url: image_url,
+        })
         .send();
     })
     .catch((err) => {
@@ -853,4 +835,3 @@ exports.add_member_photo = async (req, res) => {
       return res.status(500).json({ message: "Intenral Server Error" }).send();
     });
 };
-
