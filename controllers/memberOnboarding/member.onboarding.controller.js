@@ -2,6 +2,37 @@ const { GoogleSpreadsheet } = require("google-spreadsheet");
 const db = require("../../models");
 const prisma = db.prisma; // Creating an instance of the databse
 
+// Use this function to generate ycf id
+const generate_ycf_id = () => {
+  let ycf_id = "YCF";
+  var min = 1;
+  var max = 99999;
+  var ycf_number = Math.floor(Math.random() * (max - min + 1)) + min;
+  if (ycf_number.toString().length < 5) {
+    let ycf_number_with_zeros = "";
+    for (let i = 0; i < (5 - ycf_number.toString().length); i++) {
+      ycf_number_with_zeros += "0"
+    }
+    return ycf_id += ycf_number_with_zeros + ycf_number;
+  }else {
+    return ycf_id += ycf_number;
+  }
+} 
+
+// use this function to generate a unique id
+const get_unique_ycf_id = (member_ycf_id_list) => {
+  let ycf_id = generate_ycf_id();
+  console.log("the length is " + member_ycf_id_list.length);
+  for (let i = 0; i < member_ycf_id_list.length; i++) {
+    console.log(member_ycf_id_list[i].ycf_id);
+    if (ycf_id === member_ycf_id_list[i].ycf_id) {
+      get_unique_ycf_id(member_ycf_id_list);
+      return;
+    }
+  }
+  return ycf_id;
+}
+
 // index of the column starting from 0 = 1
 const FULL_NAME = 0;
 const REVISED_NAME = 1;
@@ -39,8 +70,8 @@ exports.onboard_member_google_sheet = async (req, res) => {
   }
     
   // Sheet name as it is on the google sheet
-  const SHEET_TITLE = "201 Education";
-  const GOOGLE_SHEET_ID = "1a_oPIB1HA0T5aPHxsbMpGt3fKTqWAyLS6VWUv9rt6j8"; 
+  const SHEET_TITLE = "411 Ration";
+  const GOOGLE_SHEET_ID = "1F1AIQY8msuibgr4qHNBOEyPI_8G_Y_Og9Iz5hXmlFOg"; 
 
   // Initialize google sheet with the sheet id
   let spread_sheet = new GoogleSpreadsheet(
@@ -65,7 +96,7 @@ exports.onboard_member_google_sheet = async (req, res) => {
   // await rows[0].save();
 
   // List of all the member
-  let member_object = create_seeding_member_object(rows);
+  let member_object = await create_seeding_member_object(rows);
 
   // Capture all the dublicate entries
   let dublicate_entries = "";
@@ -90,7 +121,7 @@ exports.onboard_member_google_sheet = async (req, res) => {
     }
   }
 
-  // This olds the current seeding id and other data
+  // This holds the current seeding id and other data
   let seeding_data_pointer;
   
   await prisma.seeding_data.create({
@@ -113,6 +144,7 @@ exports.onboard_member_google_sheet = async (req, res) => {
 
     member_object.forEach(async (member, index, array) => {
       // let percentage_completed = (member_object.length / (member_object.length - index) ) * 100;
+      console.log(member);
       await prisma.members
         .create({
           data: member.data,
@@ -120,6 +152,7 @@ exports.onboard_member_google_sheet = async (req, res) => {
         .then((result) => {
           let success_object = {
             row_number: member.row_number,
+            ycf_id: member?.data?.ycf_id,
             status: "success",
           };
           row_completed_processing.push(success_object);
@@ -207,10 +240,12 @@ exports.onboard_member_google_sheet = async (req, res) => {
           console.log("Time to loop " + loop_times);
 
           for (let j = i; j < loop_times; j++) {
+            console.log(JSON.stringify(row_completed_processing));
             let row_number = row_completed_processing[j]?.row_number - 2;
             console.log("Row Number " + row_number);
             if (row_completed_processing[j].status === "success") {
               rows[row_number].Seeded = "Yes";
+              rows[row_number]['YCF ID NO'] = row_completed_processing[j].ycf_id;
               await rows[row_number].save();
             } else {
               rows[row_number].Seeded = "No";
@@ -275,19 +310,32 @@ exports.onboard_member_google_sheet = async (req, res) => {
   });
 };
 
-const create_seeding_member_object = (rows) => {
+const create_seeding_member_object = async (rows) => {
   let member_object = [];
 
+  let master_ycf_id_list = await prisma.members.findMany({
+    select: {
+      ycf_id: true,
+    }
+  })
+
   rows.forEach((row) => {
+    let ycf_id = get_unique_ycf_id(master_ycf_id_list);
+    // once we get ycf id we update in the master ycf id collection
+    master_ycf_id_list.push({
+      ycf_id: ycf_id
+    })
+
+    console.log("Result is here " + ycf_id);
+
     let data = row._rawData;
     let member = {};
     if (row._rawData[22] !== "Yes") {
-      console.log(data);
       member = {
         row_number: row._rowNumber,
         data: {
           full_name: data[FULL_NAME],
-          ycf_id: data[YCF_ID],
+          ycf_id: ycf_id,// check here before seeding
           revised_name: data[REVISED_NAME],
           mobile_number: data[MOBILE_NUMNER],
           alternate_mobile_number: data[ALTERNATE_MOBILE_NUMBER],
