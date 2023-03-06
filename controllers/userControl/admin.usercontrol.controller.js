@@ -765,15 +765,15 @@ exports.restore_members = async (req, res) => {
 
 // Update member password
 exports.update_member_password = async (req, res) => {
-  const { member_id, new_password } = req.body;
+  const { member_id } = req.body;
 
   if (member_id === null || member_id === undefined) {
     return res.status(404).json({ message: "No Ids found" }).send();
   }
 
-  if (new_password === null || new_password === undefined) {
-    return res.status(404).json({ message: "No Password found" }).send();
-  }
+  // if (new_password === null || new_password === undefined) {
+  //   return res.status(404).json({ message: "No Password found" }).send();
+  // }
 
   await prisma.members
     .update({
@@ -781,7 +781,7 @@ exports.update_member_password = async (req, res) => {
         id: member_id,
       },
       data: {
-        password: bcrypt.hashSync(new_password, 8),
+        password: null,
       },
     })
     .then((member) => {

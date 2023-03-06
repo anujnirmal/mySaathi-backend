@@ -15,6 +15,10 @@ let file_name;
 
 // Change bucket property to your Space name
 const upload = multer({
+  limits: {
+    fileSize: '200MB',
+    fieldSize: '200MB',
+  },
   storage: multerS3({
     s3: s3,
     bucket: process.env.DO_SPACES_NAME,

@@ -4,6 +4,7 @@ const Tracing = require("@sentry/tracing");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const cron = require("node-cron");
+const bodyParser = require('body-parser');
 const member_onboarding_controller = require("./controllers/memberOnboarding/member.onboarding.controller");
 require("dotenv").config();
 
@@ -29,7 +30,8 @@ Sentry.init({
 app.use(Sentry.Handlers.requestHandler());
 // TracingHandler creates a trace for every incoming request
 app.use(Sentry.Handlers.tracingHandler());
-
+app.use(bodyParser.json({limit: '100mb', extended: true}));
+app.use(bodyParser.urlencoded({limit: '100mb', extended: true}))
 
 // Setting globally, so the response containing BigInt datatype
 // can be serialized

@@ -12,7 +12,7 @@ exports.get_all_news = async (req, res) => {
   await prisma.news
     .findMany({})
     .then((news) => {
-      // console.log(news);
+      console.log(news);
       let data = news;
       converToUTCToDate(news, data);
       return res.status(200).json({ data: data }).send();

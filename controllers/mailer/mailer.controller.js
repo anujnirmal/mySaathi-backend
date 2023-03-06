@@ -26,7 +26,7 @@ exports.send_email = async (req, res) => {
   // send mail with defined transport object
   let info = await transporter.sendMail({
     from: '"MySaathi Mobile App" <developer@yashchoprafoundation.org>', // sender address
-    to: "anujrajeshnirmal@gmail.com", // list of receivers
+    to: "contact@yashchoprafoundation.org", // list of receivers
     subject: "Contact Request From Mobile App", // Subject line
     text: email, // plain text body
     html: `<b>${email}</b>`, // html body
