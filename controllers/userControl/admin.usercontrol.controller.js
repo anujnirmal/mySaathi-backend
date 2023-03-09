@@ -3,6 +3,7 @@ const config = require("../../config/auth.config");
 const RefreshToken = require("../refreshToken/refreshToken");
 const logger = require("../../logger/logger");
 const { converToUTCToDate } = require("../../helper/helper.functions");
+const { send_member_update_email } = require("../mailer/mailer.controller");
 
 const prisma = db.prisma;
 
@@ -437,11 +438,14 @@ exports.update_member = async (req, res) => {
     registeredFilmUnionMember: registered_member_of_film_union,
     activeSaathiMemberBefore2022: active_saathi_member_till_2022,
     disabled,
+    member_other_details_id,
     mentionDisability: disability,
     salary: monthly_salary_range,
     retired: retired_person,
     gender,
   } = req.body;
+
+  console.log(req.body);
 
   const AADHAAR_LENGTH = 12;
   const MOBILE_NUMBER_LENGTH = 10;
@@ -502,8 +506,10 @@ exports.update_member = async (req, res) => {
       .send();
   }
 
-  await prisma.members
-    .update({
+  let memberData = {};
+
+  if (children?.count === 0 || children === undefined) {
+    memberData = {
       where: {
         id: member_id,
       },
@@ -536,17 +542,100 @@ exports.update_member = async (req, res) => {
           },
         },
         member_other_detail: {
-          create: {
-            registered_member_of_film_union: registered_member_of_film_union,
-            active_saathi_member_till_2022: active_saathi_member_till_2022,
-            monthly_salary_range: monthly_salary_range,
-            retired_person: retired_person,
-            disabled: disabled,
-            disability: disability,
+          update: {
+            where: {
+              id: member_other_details_id,
+            },
+            data: {
+              registered_member_of_film_union: registered_member_of_film_union,
+              active_saathi_member_till_2022: active_saathi_member_till_2022,
+              monthly_salary_range: monthly_salary_range,
+              retired_person: retired_person,
+              disabled: disabled,
+              disability: disability,
+            },
           },
         },
       },
-    })
+    };
+  } else {
+    let childrenNew = [];
+
+    for (let i = 0; i < children.length; i++) {
+      let childObject = {};
+      for (let key in children[i]) {
+        if (key != "id") {
+          childObject[key] = children[i][key];
+        }
+      }
+      childrenNew[i] = childObject;
+    }
+
+    memberData = {
+      where: {
+        id: member_id,
+      },
+      data: {
+        full_name: full_name,
+        ycf_id: ycf_id,
+        mobile_number: mobile_number.toString(),
+        aadhaar_number: aadhaar_number.toString(),
+        pancard_number: pancard_number,
+        profile_photo: profile_photo?.toString(),
+        address: address,
+        pincode: pincode,
+        modules: modules,
+        trashed: false,
+        date_of_birth: date_of_birth.toString(),
+        gender: gender,
+        alternate_mobile_number: alternate_mobile_number.toString(),
+        yearly_quota: yearly_quota,
+        children: {
+          create: childrenNew,
+        },
+        bank_detail: {
+          update: {
+            where: {
+              id: bank_id,
+            },
+            data: {
+              bank_name: bank_name,
+              bank_account_number: bank_account_number.toString(),
+              ifsc_code: ifsc_code,
+              bank_branch_name: bank_branch_name,
+            },
+          },
+        },
+        member_other_detail: {
+          update: {
+            where: {
+              id: member_other_details_id,
+            },
+            data: {
+              registered_member_of_film_union: registered_member_of_film_union,
+              active_saathi_member_till_2022: active_saathi_member_till_2022,
+              monthly_salary_range: monthly_salary_range,
+              retired_person: retired_person,
+              disabled: disabled,
+              disability: disability,
+            },
+          },
+        },
+      },
+    };
+  }
+
+  // get the old member data
+  let old_member_data = await prisma.members.findFirst({
+    where: {
+      id: member_id
+    }
+  })
+
+
+
+  await prisma.members
+    .update(memberData)
     .then(async (member) => {
       console.log("here");
       // Upadte or create New Children
@@ -575,6 +664,9 @@ exports.update_member = async (req, res) => {
             });
           }
 
+          console.log("old member data " + old_member_data)
+          send_member_update_email(old_member_data, member)
+
           return (
             res
               .status(201)
@@ -590,6 +682,10 @@ exports.update_member = async (req, res) => {
             .send();
         }
       }
+
+      
+      console.log("old member data " + old_member_data)
+      send_member_update_email(old_member_data, member)
 
       return (
         res

@@ -24,6 +24,71 @@ exports.get_all_transaction_data = async (req, res) => {
     });
 };
 
+// Update the amount
+exports.update_transaction_amount = async (req, res) => {
+  const { member_id, transaction_id, amount_requested } = req.body;
+
+  console.log(req.body);
+
+  // Check for response length
+  if (amount_requested.length === 0) {
+    // 422 - for validation error
+    return res.status(422).json({ message: "Please send the amount" }).send();
+  }
+
+  if (
+    transaction_id === null ||
+    transaction_id === undefined ||
+    member_id === null ||
+    member_id === undefined
+  ) {
+    // 422 - for validation error
+    return res
+      .status(422)
+      .json({ message: "Transaction id cannot be null" })
+      .send();
+  }
+
+  if (member_id.length === 0 || member_id === null || member_id === undefined) {
+    // 422 - for validation error
+    return res.status(422).json({ message: "Member id cannot be null" }).send();
+  }
+
+  try {
+    let curr_member = await prisma.members.findFirst({
+      where: {
+        id: member_id,
+      },
+    });
+
+    // Check if member has balance
+    let member_old_balance = curr_member.balance_amount;
+    if (member_old_balance - amount_requested < 0) {
+      return res.status(422).json({ message: "Member balance too low" }).send();
+    }
+
+    // If members have balance than add to the transaction
+    let transaction = await prisma.member_bank_transaction.update({
+      where: {
+        id: transaction_id,
+      },
+      data: {
+        amount_requested: amount_requested,
+      },
+    });
+
+    return res
+      .status(200)
+      .json({
+        message: "Successfully updated the transaction",
+        data: transaction,
+      })
+      .send();
+  } catch (err) {
+    res.status(500).json({ message: "Internal Server Error" }).send();
+  }
+};
+
 // Get transaction data of one or more users
 exports.get_transaction_data_by_member_id = async (req, res) => {
   // member_ids format = [1,2,3]
@@ -60,6 +125,7 @@ exports.get_transaction_data_by_member_id = async (req, res) => {
 
 // Get all pending transactions that needs to be accepted or rejected
 exports.get_all_pending_transaction = async (req, res) => {
+  console.log("Hey");
   await prisma.member_bank_transaction
     .findMany({
       where: {
@@ -69,13 +135,27 @@ exports.get_all_pending_transaction = async (req, res) => {
         requested_date: "desc",
       },
       include: {
-        member: true,
+        member: {
+          include: {
+            bank_detail: true,
+            children: true,
+            member_other_detail: true,
+          },
+        },
         receipts: true,
       },
     })
     .then((bank_transaction) => {
-      console.log(bank_transaction);
-      let data = bank_transaction;
+      // console.log(bank_transaction);
+
+      let data = [];
+
+      for (let i = 0; i < bank_transaction.length; i++) {
+        console.log(bank_transaction[i]?.member.password);
+        delete bank_transaction[i]?.member.password;
+        data.push(bank_transaction[i]);
+      }
+
       //   convertUTCToDate(news, data);
       return res.status(200).json({ data: data }).send();
     })
@@ -242,7 +322,7 @@ exports.add_receipts = async (req, res) => {
       .send();
   } catch (err) {
     logger.error(err);
-    return res.status(500).json({ message: "Intenral Server Error" }).send();
+    return res.status(500).json({ message: "Internal Server Error" }).send();
   }
 };
 
@@ -253,11 +333,11 @@ exports.accept_transaction = async (req, res) => {
 
   console.log(req.body);
 
-  // Check for response length
-  if (amount_requested.length === 0) {
-    // 422 - for validation error
-    return res.status(422).json({ message: "Please send the amount" }).send();
-  }
+  // // Check for response length
+  // if (amount_requested.length === 0) {
+  //   // 422 - for validation error
+  //   return res.status(422).json({ message: "Please send the amount" }).send();
+  // }
 
   if (
     transaction_id === null ||
@@ -297,14 +377,15 @@ exports.accept_transaction = async (req, res) => {
       },
       data: {
         status: "APPROVED",
-        amount_requested: amount_requested,
+        // amount_requested: amount_requested,
         transaction_date: new Date(),
         admin_name: admin_name,
         admin_id: admin_id,
       },
     });
 
-    let new_balance = member_old_balance - amount_requested;
+    // console.log("tran" + JSON.stringify(transaction));
+    let new_balance = member_old_balance - parseInt(transaction?.amount_requested);
 
     let new_member_balance = await prisma.members.update({
       where: {
@@ -315,21 +396,23 @@ exports.accept_transaction = async (req, res) => {
       },
     });
 
+    console.log(transaction);
+
     let messageContent;
 
     let englishContent = {
       title: "Transaction Approved",
-      body: `Your request for transaction of amount ${amount_requested} has been accepted`,
+      body: `Your request for transaction of amount ${transaction?.amount_requested} has been accepted`,
     };
 
     let hindiContent = {
       title: "लेन-देन स्वीकृत",
-      body: `${amount_requested} राशि के लेन-देन के लिए आपका अनुरोध स्वीकार कर लिया गया है`,
+      body: `${transaction?.amount_requested} राशि के लेन-देन के लिए आपका अनुरोध स्वीकार कर लिया गया है`,
     };
 
     let marathiContent = {
       title: "व्यवहार मंजूर",
-      body: `${amount_requested} रकमेच्या व्यवहारासाठी तुमची विनंती स्वीकारण्यात आली आहे"`,
+      body: `${transaction?.amount_requested} रकमेच्या व्यवहारासाठी तुमची विनंती स्वीकारण्यात आली आहे"`,
     };
 
     await prisma.members

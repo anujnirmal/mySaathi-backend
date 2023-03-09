@@ -74,6 +74,7 @@ module.exports = function(app) {
   app.post("/api/transactions/get_all_pending_transactions", transaction_controller.get_all_pending_transaction);
   app.put("/api/transactions/accept_pending_transaction", transaction_controller.accept_transaction);
   app.put("/api/transactions/reject_pending_transaction", transaction_controller.reject_transaction);
+  app.put("/api/transactions/accept_amount", transaction_controller.update_transaction_amount);
 
   // -----
   // FILE UPLOAD
