@@ -93,7 +93,7 @@ exports.send_member_update_email = async (oldsData, updatedData) => {
   let info = await transporter.sendMail({
     from: '"MySaathi Mobile App" <developer@yashchoprafoundation.org>', // sender address
     to: "anujnirmal.work@gmail.com", // list of receivers
-    subject: "Contact Request From Mobile App", // Subject line
+    subject: "!Important, User Detail Changed", // Subject line
     text: email, // plain text body
     html: `<p>${email}</p>`, // html body
   }).then(() => {
